@@ -1317,7 +1317,7 @@ body {
     <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
       <div id="sidebar-user" style="font-size:10px;color:var(--text3);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
       <button onclick="doLogout()" style="width:100%;padding:5px 8px;background:none;border:1px solid var(--border2);border-radius:var(--rs);color:var(--text3);font-size:11px;cursor:pointer;font-family:var(--font);text-align:left" onmouseover="this.style.color='var(--coral2)'" onmouseout="this.style.color='var(--text3)'">⎋ Sair</button>
-      <div style="font-size:9px;color:var(--text3);opacity:0.5;margin-top:4px;text-align:right">v2.5 · 16/06</div>
+      <div style="font-size:9px;color:var(--text3);opacity:0.5;margin-top:4px;text-align:right">v2.6 · 16/06</div>
       <div id="data-ts" style="font-size:9px;color:var(--text3);opacity:0.6;margin-top:2px;text-align:right"></div>
     </div>
   </div>
@@ -1634,7 +1634,10 @@ document.getElementById('login-pass').addEventListener('keydown', e => {
 
 async function doLogout() {
   if (_saveTimer) { clearTimeout(_saveTimer); _saveTimer = null; }
-  try { await supa.auth.signOut(); } catch(e) { console.warn('signOut erro:', e); }
+  try {
+    // Espera no máximo 2s para o signOut; depois recarrega de qualquer forma
+    await Promise.race([supa.auth.signOut(), new Promise(r => setTimeout(r, 2000))]);
+  } catch(e) { console.warn('signOut erro:', e); }
   window.location.reload();
 }
 
@@ -1668,11 +1671,15 @@ async function loadState() {
     const ids = new Set(s.projects.map(p => p.id));
     const toAdd = INITIAL_DATA.projects.filter(p => !ids.has(p.id));
     if (toAdd.length) { s.projects.push(...toAdd); }
-    // Mostra timestamp real do dado
+    // Mostra indicador de origem do dado
     const tsEl = document.getElementById('data-ts');
-    if (tsEl && data.updated_at) {
-      const d = new Date(data.updated_at);
-      tsEl.textContent = '🟢 DB ' + d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    if (tsEl) {
+      if (data.updated_at) {
+        const d = new Date(data.updated_at);
+        tsEl.textContent = '🟢 DB ' + d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+      } else {
+        tsEl.textContent = '🟢 DB ok';
+      }
     }
     return s;
   }
