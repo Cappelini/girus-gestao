@@ -1317,7 +1317,7 @@ body {
     <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
       <div id="sidebar-user" style="font-size:10px;color:var(--text3);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
       <button onclick="doLogout()" style="width:100%;padding:5px 8px;background:none;border:1px solid var(--border2);border-radius:var(--rs);color:var(--text3);font-size:11px;cursor:pointer;font-family:var(--font);text-align:left" onmouseover="this.style.color='var(--coral2)'" onmouseout="this.style.color='var(--text3)'">⎋ Sair</button>
-      <div style="font-size:9px;color:var(--text3);opacity:0.5;margin-top:4px;text-align:right">v2.6 · 16/06</div>
+      <div style="font-size:9px;color:var(--text3);opacity:0.5;margin-top:4px;text-align:right">v2.7 · 16/06</div>
       <div id="data-ts" style="font-size:9px;color:var(--text3);opacity:0.6;margin-top:2px;text-align:right"></div>
     </div>
   </div>
@@ -1634,57 +1634,57 @@ document.getElementById('login-pass').addEventListener('keydown', e => {
 
 async function doLogout() {
   if (_saveTimer) { clearTimeout(_saveTimer); _saveTimer = null; }
-  try {
-    // Espera no máximo 2s para o signOut; depois recarrega de qualquer forma
-    await Promise.race([supa.auth.signOut(), new Promise(r => setTimeout(r, 2000))]);
-  } catch(e) { console.warn('signOut erro:', e); }
+  // Remove chaves Supabase do localStorage diretamente (método mais confiável)
+  Object.keys(localStorage).filter(k => k.startsWith('sb-')).forEach(k => localStorage.removeItem(k));
+  try { supa.auth.signOut(); } catch(e) {}
   window.location.reload();
 }
 
 async function loadState() {
+  const showTs = (txt) => { const el = document.getElementById('data-ts'); if (el) el.textContent = txt; };
+
   let { data, error } = await supa
     .from('girus_state')
-    .select('data')
+    .select('data, updated_at')
     .eq('id','singleton')
     .single();
 
   // Se falhou por auth, tenta refresh do token e repete
   if (error) {
     console.warn('loadState erro inicial:', error.message);
-    const { error: refreshErr } = await supa.auth.refreshSession();
-    if (!refreshErr) {
-      const res = await supa.from('girus_state').select('data,updated_at').eq('id','singleton').single();
+    try {
+      await supa.auth.refreshSession();
+      const res = await supa.from('girus_state').select('data, updated_at').eq('id','singleton').single();
       data  = res.data;
       error = res.error;
-    }
+    } catch(refreshErr) { console.warn('refresh falhou:', refreshErr); }
   }
 
   if (error) {
-    console.error('loadState falhou após refresh:', error.message);
-    // Mostra aviso visível ao usuário
+    console.error('loadState falhou:', error.message);
     const ind = document.getElementById('sync-indicator');
-    if (ind) { ind.textContent = '⚠️ Erro ao carregar dados — recarregue a página'; ind.style.display = 'block'; ind.style.color = '#f87171'; }
+    if (ind) { ind.textContent = '⚠️ Erro ao carregar — recarregue'; ind.style.display = 'block'; ind.style.color = '#f87171'; }
+    showTs('🔴 ERRO Supabase');
+    return JSON.parse(JSON.stringify(INITIAL_DATA));
   }
 
   if (data?.data) {
-    const s = data.data;
-    const ids = new Set(s.projects.map(p => p.id));
-    const toAdd = INITIAL_DATA.projects.filter(p => !ids.has(p.id));
-    if (toAdd.length) { s.projects.push(...toAdd); }
-    // Mostra indicador de origem do dado
-    const tsEl = document.getElementById('data-ts');
-    if (tsEl) {
-      if (data.updated_at) {
-        const d = new Date(data.updated_at);
-        tsEl.textContent = '🟢 DB ' + d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-      } else {
-        tsEl.textContent = '🟢 DB ok';
-      }
+    try {
+      const s = data.data;
+      if (!Array.isArray(s.projects)) throw new Error('projects inválido');
+      const ids = new Set(s.projects.map(p => p.id));
+      const toAdd = INITIAL_DATA.projects.filter(p => !ids.has(p.id));
+      if (toAdd.length) s.projects.push(...toAdd);
+      const ts = data.updated_at ? new Date(data.updated_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : 'ok';
+      showTs('🟢 DB ' + ts);
+      return s;
+    } catch(parseErr) {
+      console.error('loadState parse erro:', parseErr);
+      showTs('⚠️ ' + parseErr.message);
     }
-    return s;
   }
-  const tsEl = document.getElementById('data-ts');
-  if (tsEl) tsEl.textContent = '🔴 LOCAL (sem Supabase)';
+
+  showTs('🔴 LOCAL (sem dado)');
   return JSON.parse(JSON.stringify(INITIAL_DATA));
 }
 
