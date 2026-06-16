@@ -8,6 +8,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gestão de Projetos — Girus</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 
 :root {
@@ -237,6 +238,59 @@ body {
 .dash-item-proj { font-weight: 600; color: var(--navy2); min-width: 120px; font-size: 11px; flex-shrink: 0; }
 .dash-item-txt  { color: var(--text2); flex: 1; line-height: 1.4; }
 .dash-item-dead { font-size: 11px; font-weight: 600; white-space: nowrap; margin-left: auto; }
+
+/* ── DASHBOARD CHARTS ── */
+.dash-charts-row {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+@media(max-width:900px) { .dash-charts-row { grid-template-columns: 1fr; } }
+.dash-chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+.dash-chart-hd {
+  padding: 12px 16px;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: var(--text2);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.dash-chart-hd span { font-size: 10px; font-weight: 400; opacity: .6; text-transform: none; letter-spacing: 0; }
+.dash-chart-body { padding: 16px; position: relative; }
+.dash-chart-body.tight { padding: 12px 16px 8px; }
+.dash-vel-row {
+  margin-top: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.dash-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  padding: 8px 16px 12px;
+  font-size: 11px;
+  color: var(--text3);
+}
+.dash-legend-dot {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 4px;
+  vertical-align: middle;
+}
 .empty-msg { padding: 20px 16px; color: var(--text3); font-size: 13px; font-style: italic; }
 
 /* ── PROJECT LAYOUT ── */
@@ -855,6 +909,192 @@ body {
 }
 .kanban-move-btn span:hover { color: var(--teal2); text-decoration: underline; }
 
+/* ── HOJE ── */
+.hoje-filters {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px 18px;
+  margin-bottom: 20px;
+}
+.hoje-filter-group { display: flex; flex-direction: column; gap: 4px; }
+.hoje-filter-group label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+.hoje-filter-group select,
+.hoje-filter-group input[type=text] {
+  border: 1px solid var(--border2);
+  border-radius: var(--rs);
+  padding: 7px 10px;
+  font-size: 13px;
+  font-family: var(--font);
+  color: var(--text);
+  background: var(--surface2);
+  outline: none;
+  min-width: 140px;
+}
+.hoje-filter-group select:focus,
+.hoje-filter-group input:focus { border-color: var(--teal); }
+.hoje-filter-group select option { background: var(--surface2); }
+.hoje-filter-clear {
+  background: none;
+  border: 1px solid var(--border2);
+  color: var(--text3);
+  padding: 7px 14px;
+  border-radius: var(--rs);
+  font-size: 12px;
+  cursor: pointer;
+  font-family: var(--font);
+  align-self: flex-end;
+  transition: .12s;
+}
+.hoje-filter-clear:hover { color: var(--coral2); border-color: var(--coral); }
+.hoje-stats {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  font-size: 12px;
+  color: var(--text3);
+}
+.hoje-stats strong { color: var(--text2); }
+.hoje-group { margin-bottom: 20px; }
+.hoje-group-hd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--text3);
+}
+.hoje-group-hd .count-pill {
+  background: var(--surface2);
+  border-radius: 10px;
+  padding: 1px 7px;
+  font-size: 10px;
+}
+.hoje-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rs);
+  margin-bottom: 6px;
+  font-size: 13.5px;
+  transition: .12s;
+}
+.hoje-item:hover { border-color: var(--border2); background: var(--surface2); }
+.hoje-item.urgente { border-left: 3px solid var(--coral); }
+.hoje-item.andamento { border-left: 3px solid var(--teal); }
+.hoje-item.afazer { border-left: 3px solid var(--border2); }
+.hoje-item.bloqueado { border-left: 3px solid #E65100; opacity: .75; }
+.hoje-check {
+  width: 18px; height: 18px;
+  border: 2px solid var(--border2);
+  border-radius: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: .12s;
+  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+}
+.hoje-check:hover { border-color: var(--teal); color: var(--teal2); }
+.hoje-item-body { min-width: 0; }
+.hoje-item-proj {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--navy2);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hoje-item-text { color: var(--text); line-height: 1.35; }
+.hoje-item-tema {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--lamber);
+  color: var(--amber2);
+  border: 1px solid rgba(233,196,106,.25);
+  padding: 1px 7px;
+  border-radius: 10px;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+.hoje-item-notes { font-size: 11px; color: var(--text3); font-style: italic; margin-top: 3px; }
+.hoje-item-resp {
+  font-size: 11px;
+  background: var(--surface3);
+  padding: 2px 8px;
+  border-radius: 10px;
+  color: var(--text2);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.hoje-item-dead { font-size: 11px; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+.hoje-item-act {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.hoje-item-act button {
+  background: none;
+  border: 1px solid var(--border2);
+  color: var(--text3);
+  padding: 3px 8px;
+  border-radius: var(--rs);
+  font-size: 11px;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: .12s;
+}
+.hoje-item-act button:hover { background: var(--surface3); color: var(--text); }
+.hoje-item-act .btn-done-q:hover { border-color: var(--teal); color: var(--teal2); background: var(--lteal); }
+.hoje-item-act .btn-open:hover { border-color: var(--navy2); color: var(--navy2); }
+.hoje-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text3);
+  font-size: 14px;
+}
+.hoje-agrupar {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+  align-self: flex-end;
+}
+.hoje-agrupar button {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text3);
+  padding: 5px 10px;
+  border-radius: var(--rs);
+  font-size: 11px;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: .12s;
+}
+.hoje-agrupar button.active { background: var(--navy2); color: #fff; border-color: var(--navy2); }
+
 /* ── TIMELINE ── */
 .timeline-wrap { padding: 16px 20px; }
 .timeline-header {
@@ -1161,6 +1401,64 @@ body {
 .activity-proj { font-size: 11px; color: var(--text3); }
 .activity-time { font-size: 10px; color: var(--text3); white-space: nowrap; margin-top: 3px; }
 
+/* ── FILTROS DE ATUALIZAÇÕES ── */
+.activity-filters {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px 18px;
+  margin: 0 0 16px 0;
+}
+.act-filter-group { display: flex; flex-direction: column; gap: 4px; }
+.act-filter-group label {
+  font-size: 10px; font-weight: 700; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .5px;
+}
+.act-filter-group select {
+  border: 1px solid var(--border2); border-radius: var(--rs);
+  padding: 7px 10px; font-size: 13px; font-family: var(--font);
+  color: var(--text); background: var(--surface2); outline: none; min-width: 160px;
+}
+.act-filter-group select:focus { border-color: var(--teal); }
+.act-filter-group select option { background: var(--surface2); }
+.btn-hoje-filter {
+  padding: 7px 14px; border-radius: var(--rs); font-size: 12px; font-weight: 700;
+  font-family: var(--font); cursor: pointer; border: 1px solid var(--border2);
+  background: var(--surface2); color: var(--text2); transition: .12s; align-self: flex-end;
+}
+.btn-hoje-filter.active {
+  background: var(--lteal); border-color: var(--teal); color: var(--teal2);
+}
+.btn-hoje-filter:hover { border-color: var(--teal); color: var(--teal2); }
+.act-filter-clear {
+  background: none; border: 1px solid var(--border2); color: var(--text3);
+  padding: 7px 14px; border-radius: var(--rs); font-size: 12px; cursor: pointer;
+  font-family: var(--font); align-self: flex-end; transition: .12s;
+}
+.act-filter-clear:hover { color: var(--coral2); border-color: var(--coral); }
+.activity-stats {
+  display: flex; gap: 16px; margin-bottom: 12px;
+  font-size: 12px; color: var(--text3); flex-wrap: wrap;
+}
+.activity-stats strong { color: var(--text2); }
+.activity-group-hd {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 0; border-bottom: 1px solid var(--border);
+  margin: 16px 0 4px; font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .5px; color: var(--text3);
+}
+.act-report-btn {
+  margin-left: auto; background: var(--surface2); border: 1px solid var(--border2);
+  color: var(--text2); padding: 5px 12px; border-radius: var(--rs);
+  font-size: 11px; cursor: pointer; font-family: var(--font); font-weight: 600;
+  transition: .12s;
+}
+.act-report-btn:hover { background: var(--navy2); color: #fff; border-color: var(--navy2); }
+
 /* ── NOTIFICAÇÕES ── */
 .notif-item {
   display: flex;
@@ -1287,6 +1585,11 @@ body {
       <span class="nav-icon">⚡</span>
       <span class="nav-label">Briefing do Dia</span>
     </button>
+    <button class="nav-item" onclick="showTab('hoje')">
+      <span class="nav-icon">✅</span>
+      <span class="nav-label">Fazer Hoje</span>
+      <span class="nav-badge" id="badge-hoje" style="display:none"></span>
+    </button>
     <button class="nav-item" onclick="showTab('reuniao')">
       <span class="nav-icon">📅</span>
       <span class="nav-label">Reunião Semanal</span>
@@ -1317,7 +1620,7 @@ body {
     <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
       <div id="sidebar-user" style="font-size:10px;color:var(--text3);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
       <button onclick="doLogout()" style="width:100%;padding:5px 8px;background:none;border:1px solid var(--border2);border-radius:var(--rs);color:var(--text3);font-size:11px;cursor:pointer;font-family:var(--font);text-align:left" onmouseover="this.style.color='var(--coral2)'" onmouseout="this.style.color='var(--text3)'">⎋ Sair</button>
-      <div style="font-size:9px;color:var(--text3);opacity:0.5;margin-top:4px;text-align:right">v2.7 · 16/06</div>
+      <div style="font-size:9px;color:var(--text3);opacity:0.5;margin-top:4px;text-align:right">v3.0 · 16/06</div>
       <div id="data-ts" style="font-size:9px;color:var(--text3);opacity:0.6;margin-top:2px;text-align:right"></div>
     </div>
   </div>
@@ -1334,6 +1637,31 @@ body {
       </div>
     </div>
     <div class="kpi-strip" id="kpi-strip"></div>
+
+    <!-- ── Gráficos ── -->
+    <div class="dash-charts-row">
+      <div class="dash-chart-card">
+        <div class="dash-chart-hd">📊 Burndown por Projeto <span>ações por status</span></div>
+        <div class="dash-chart-body tight">
+          <canvas id="chart-burndown" height="0"></canvas>
+        </div>
+        <div class="dash-legend" id="legend-burndown"></div>
+      </div>
+      <div class="dash-chart-card">
+        <div class="dash-chart-hd">🍩 Distribuição Global</div>
+        <div class="dash-chart-body" style="display:flex;flex-direction:column;align-items:center;gap:8px">
+          <canvas id="chart-donut" width="200" height="200"></canvas>
+          <div class="dash-legend" id="legend-donut" style="justify-content:center;padding:0 0 4px"></div>
+        </div>
+      </div>
+    </div>
+    <div class="dash-vel-row">
+      <div class="dash-chart-hd">⚡ Velocidade Semanal <span>ações concluídas por semana · últimas 8 semanas</span></div>
+      <div class="dash-chart-body">
+        <canvas id="chart-velocity" height="70"></canvas>
+      </div>
+    </div>
+
     <div class="dash-grid">
       <div class="dash-section">
         <div class="dash-section-hd coral">🔥 Urgente / Esta Semana</div>
@@ -1393,6 +1721,69 @@ body {
     </div>
   </div>
 
+  <!-- ══ FAZER HOJE ══ -->
+  <div class="tab-pane" id="tab-hoje">
+    <div class="page-hd">
+      <div>
+        <div class="page-title">Fazer Hoje</div>
+        <div class="page-subtitle" id="hoje-subtitle">Atividades filtradas por prioridade</div>
+      </div>
+      <button class="btn-add" onclick="renderHoje()" style="margin-left:auto">↻ Atualizar</button>
+    </div>
+
+    <!-- Filtros -->
+    <div class="hoje-filters">
+      <div class="hoje-filter-group">
+        <label>Buscar</label>
+        <input type="text" id="hj-search" placeholder="texto da ação…" oninput="renderHoje()">
+      </div>
+      <div class="hoje-filter-group">
+        <label>Projeto</label>
+        <select id="hj-proj" onchange="renderHoje()">
+          <option value="">Todos os projetos</option>
+        </select>
+      </div>
+      <div class="hoje-filter-group">
+        <label>Responsável</label>
+        <select id="hj-resp" onchange="renderHoje()">
+          <option value="">Todos</option>
+          <option>Cappelini</option>
+          <option>Helo</option>
+          <option>Capp/Helo</option>
+        </select>
+      </div>
+      <div class="hoje-filter-group">
+        <label>Status</label>
+        <select id="hj-status" onchange="renderHoje()">
+          <option value="">Todos (exceto concluído)</option>
+          <option value="urgente">🔥 Urgente</option>
+          <option value="andamento">🔄 Em Andamento</option>
+          <option value="afazer">📌 A Fazer</option>
+          <option value="bloqueado">⚠️ Bloqueado</option>
+        </select>
+      </div>
+      <div class="hoje-filter-group">
+        <label>Prazo</label>
+        <select id="hj-prazo" onchange="renderHoje()">
+          <option value="">Todos os prazos</option>
+          <option value="hoje">Vence hoje</option>
+          <option value="semana">Esta semana</option>
+          <option value="atrasado">Atrasado</option>
+        </select>
+      </div>
+      <div class="hoje-agrupar">
+        <button id="hj-grp-status" class="active" onclick="setHojeGrupo('status')">Por Status</button>
+        <button id="hj-grp-proj" onclick="setHojeGrupo('proj')">Por Projeto</button>
+        <button id="hj-grp-resp" onclick="setHojeGrupo('resp')">Por Responsável</button>
+        <button id="hj-grp-flat" onclick="setHojeGrupo('flat')">Sem Grupo</button>
+      </div>
+      <button class="hoje-filter-clear" onclick="limparFiltrosHoje()">✕ Limpar</button>
+    </div>
+
+    <div class="hoje-stats" id="hoje-stats"></div>
+    <div id="hoje-list"></div>
+  </div>
+
   <!-- ══ REUNIÃO SEMANAL ══ -->
   <div class="tab-pane" id="tab-reuniao">
     <div class="page-hd">
@@ -1442,16 +1833,50 @@ body {
     </div>
   </div>
 
-  <!-- ══ GUIA DE USO ══ -->
+  <!-- ══ ATUALIZAÇÕES ══ -->
   <div class="tab-pane" id="tab-atividade">
     <div class="page-hd">
       <div>
         <div class="page-title">Atualizações</div>
-        <div class="page-subtitle">Histórico de mudanças em tempo real</div>
+        <div class="page-subtitle" id="act-subtitle">Histórico de mudanças em tempo real</div>
       </div>
       <button class="btn-add" onclick="loadActivity(true)" style="margin-left:auto">↻ Atualizar</button>
     </div>
-    <div id="activity-feed" class="activity-feed"></div>
+
+    <!-- Filtros -->
+    <div class="activity-filters">
+      <div class="act-filter-group">
+        <label>Projeto</label>
+        <select id="act-proj" onchange="renderActivityFeed()">
+          <option value="">Todos os projetos</option>
+        </select>
+      </div>
+      <div class="act-filter-group">
+        <label>Responsável</label>
+        <select id="act-resp" onchange="renderActivityFeed()">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div class="act-filter-group">
+        <label>Tipo de mudança</label>
+        <select id="act-tipo" onchange="renderActivityFeed()">
+          <option value="">Todos os tipos</option>
+          <option value="concluido">✅ Concluídas</option>
+          <option value="nova_acao">➕ Novas ações</option>
+          <option value="status">🔄 Mudança de status</option>
+          <option value="notas">💬 Observações</option>
+          <option value="prazo">📅 Prazo alterado</option>
+          <option value="reaberto">↩ Reabertas</option>
+          <option value="excluido">🗑 Excluídas</option>
+        </select>
+      </div>
+      <button id="btn-hoje-act" class="btn-hoje-filter" onclick="toggleHojeAct()">📅 Realizadas hoje</button>
+      <button class="act-filter-clear" onclick="limparFiltrosAct()">✕ Limpar</button>
+      <button class="act-report-btn" onclick="imprimirRelatorioAct()">🖨 Imprimir relatório</button>
+    </div>
+
+    <div class="activity-stats" id="act-stats"></div>
+    <div id="activity-feed" class="activity-feed" style="padding:0 0 20px"></div>
   </div>
 
   <div class="tab-pane" id="tab-notificacoes">
@@ -1804,40 +2229,211 @@ function timeAgo(ts) {
   return Math.floor(diff/86400) + 'd atrás';
 }
 
+let _activityData = [];     // dados brutos do Supabase
+let _actHojeOnly  = false;  // toggle "realizadas hoje"
+
 async function loadActivity(fromBtn) {
+  const el = document.getElementById('activity-feed');
+  el.innerHTML = '<div style="padding:40px 0;text-align:center;color:var(--text3);font-size:13px">Carregando…</div>';
+
   const { data } = await supa
     .from('girus_activity')
     .select('*')
     .order('created_at', { ascending: false })
-    .limit(50);
+    .limit(200);
 
-  const el = document.getElementById('activity-feed');
   if (!data || !data.length) {
     el.innerHTML = '<div style="padding:40px 0;text-align:center;color:var(--text3);font-size:13px">Nenhuma atualização ainda.</div>';
     return;
   }
 
-  // Atualiza badge com itens desde última visita
+  _activityData = data;
+
+  // Badge
   if (fromBtn) {
     _lastActivitySeen = data[0]?.created_at || '';
     localStorage.setItem('girus_last_activity', _lastActivitySeen);
     document.getElementById('badge-atividade').classList.remove('visible');
   }
 
-  el.innerHTML = data.map(item => `
-    <div class="activity-item">
-      <div class="activity-icon">${ACTIVITY_ICON[item.change_type] || '📌'}</div>
-      <div class="activity-body">
-        <div class="activity-who">${item.done_by || 'Sistema'}</div>
-        <div class="activity-what">
-          <strong>${ACTIVITY_LABEL[item.change_type] || item.change_type}</strong>:
-          ${item.action_text || ''}
-          ${item.change_detail ? `<span style="color:var(--text3)"> — ${item.change_detail}</span>` : ''}
+  // Popula selects (projeto e responsável) com valores únicos dos dados
+  populateActivityFilters(data);
+  renderActivityFeed();
+}
+
+function populateActivityFilters(data) {
+  // Projetos únicos
+  const projSel = document.getElementById('act-proj');
+  if (projSel) {
+    const curProj = projSel.value;
+    const projs = [...new Set(data.map(d => d.project_name).filter(Boolean))].sort();
+    projSel.innerHTML = '<option value="">Todos os projetos</option>' +
+      projs.map(p => `<option value="${p}" ${curProj===p?'selected':''}>${p}</option>`).join('');
+  }
+  // Responsáveis únicos
+  const respSel = document.getElementById('act-resp');
+  if (respSel) {
+    const curResp = respSel.value;
+    const resps = [...new Set(data.map(d => d.done_by).filter(Boolean))].sort();
+    respSel.innerHTML = '<option value="">Todos</option>' +
+      resps.map(r => `<option value="${r}" ${curResp===r?'selected':''}>${r}</option>`).join('');
+  }
+}
+
+function toggleHojeAct() {
+  _actHojeOnly = !_actHojeOnly;
+  const btn = document.getElementById('btn-hoje-act');
+  if (btn) btn.classList.toggle('active', _actHojeOnly);
+  renderActivityFeed();
+}
+
+function limparFiltrosAct() {
+  const projSel = document.getElementById('act-proj');
+  const respSel = document.getElementById('act-resp');
+  const tipoSel = document.getElementById('act-tipo');
+  if (projSel) projSel.value = '';
+  if (respSel) respSel.value = '';
+  if (tipoSel) tipoSel.value = '';
+  _actHojeOnly = false;
+  const btn = document.getElementById('btn-hoje-act');
+  if (btn) btn.classList.remove('active');
+  renderActivityFeed();
+}
+
+function renderActivityFeed() {
+  const el = document.getElementById('activity-feed');
+  if (!el || !_activityData.length) return;
+
+  const filtProj = document.getElementById('act-proj')?.value || '';
+  const filtResp = document.getElementById('act-resp')?.value || '';
+  const filtTipo = document.getElementById('act-tipo')?.value || '';
+
+  const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+  const todayEnd   = new Date(); todayEnd.setHours(23,59,59,999);
+
+  let items = _activityData;
+  if (filtProj)    items = items.filter(d => d.project_name === filtProj);
+  if (filtResp)    items = items.filter(d => d.done_by === filtResp);
+  if (filtTipo)    items = items.filter(d => d.change_type === filtTipo);
+  if (_actHojeOnly) {
+    items = items.filter(d => {
+      if (d.change_type !== 'concluido') return false;
+      const t = new Date(d.created_at);
+      return t >= todayStart && t <= todayEnd;
+    });
+  }
+
+  // Stats
+  const statEl = document.getElementById('act-stats');
+  if (statEl) {
+    const concHoje = _activityData.filter(d => {
+      if (d.change_type !== 'concluido') return false;
+      const t = new Date(d.created_at);
+      return t >= todayStart && t <= todayEnd;
+    }).length;
+    statEl.innerHTML =
+      `<span><strong>${items.length}</strong> registro${items.length!==1?'s':''} exibido${items.length!==1?'s':''}</span>` +
+      (concHoje ? `<span>✅ <strong>${concHoje}</strong> concluída${concHoje>1?'s':''} hoje</span>` : '') +
+      ((_actHojeOnly || filtTipo || filtProj || filtResp) ? `<span style="color:var(--amber2)">⚑ Filtros ativos</span>` : '');
+  }
+
+  // Subtitle
+  const sub = document.getElementById('act-subtitle');
+  if (sub && _actHojeOnly) {
+    const hoje = new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
+    sub.textContent = `Relatório de concluídas — ${hoje}`;
+  } else if (sub) {
+    sub.textContent = 'Histórico de mudanças em tempo real';
+  }
+
+  if (!items.length) {
+    el.innerHTML = '<div style="padding:40px 0;text-align:center;color:var(--text3);font-size:13px">Nenhum registro com os filtros aplicados.</div>';
+    return;
+  }
+
+  // Agrupar por data
+  function dateLabel(ts) {
+    const d = new Date(ts);
+    const today  = new Date(); today.setHours(0,0,0,0);
+    const yest   = new Date(today); yest.setDate(yest.getDate()-1);
+    const dStart = new Date(d); dStart.setHours(0,0,0,0);
+    if (dStart.getTime() === today.getTime())     return 'Hoje';
+    if (dStart.getTime() === yest.getTime())      return 'Ontem';
+    return d.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
+  }
+
+  function itemHTML(item) {
+    return `
+      <div class="activity-item">
+        <div class="activity-icon">${ACTIVITY_ICON[item.change_type] || '📌'}</div>
+        <div class="activity-body">
+          <div class="activity-who">${item.done_by || 'Sistema'}</div>
+          <div class="activity-what">
+            <strong>${ACTIVITY_LABEL[item.change_type] || item.change_type}</strong>:
+            ${item.action_text || ''}
+            ${item.change_detail ? `<span style="color:var(--text3)"> — ${item.change_detail}</span>` : ''}
+          </div>
+          <div class="activity-proj">📂 ${item.project_name || ''}</div>
+          <div class="activity-time">${new Date(item.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})} · ${timeAgo(item.created_at)}</div>
         </div>
-        <div class="activity-proj">📂 ${item.project_name || ''}</div>
-        <div class="activity-time">${timeAgo(item.created_at)}</div>
-      </div>
-    </div>`).join('');
+      </div>`;
+  }
+
+  // Agrupa por dia
+  const groups = {};
+  const groupOrder = [];
+  items.forEach(item => {
+    const lbl = dateLabel(item.created_at);
+    if (!groups[lbl]) { groups[lbl] = []; groupOrder.push(lbl); }
+    groups[lbl].push(item);
+  });
+
+  el.innerHTML = groupOrder.map(lbl => `
+    <div class="activity-group-hd">
+      ${lbl}
+      <span style="font-size:10px;font-weight:400;opacity:.6">${groups[lbl].length} registro${groups[lbl].length!==1?'s':''}</span>
+    </div>
+    ${groups[lbl].map(itemHTML).join('')}
+  `).join('');
+}
+
+function imprimirRelatorioAct() {
+  const filtProj = document.getElementById('act-proj')?.value || '';
+  const filtResp = document.getElementById('act-resp')?.value || '';
+  const hoje = new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const titulo = _actHojeOnly
+    ? `Relatório de Atividades Concluídas — ${hoje}`
+    : `Histórico de Atualizações — Girus Projetos`;
+  const subtitulo = [
+    filtProj ? `Projeto: ${filtProj}` : '',
+    filtResp ? `Responsável: ${filtResp}` : '',
+    _actHojeOnly ? 'Apenas concluídas hoje' : ''
+  ].filter(Boolean).join(' · ');
+
+  const feedHTML = document.getElementById('activity-feed').innerHTML;
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <title>${titulo}</title>
+    <style>
+      body { font-family: Arial, sans-serif; padding: 32px; color: #333; max-width: 800px; margin: 0 auto; }
+      h1 { font-size: 18px; margin-bottom: 4px; }
+      .sub { font-size: 12px; color: #666; margin-bottom: 24px; }
+      .activity-group-hd { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+        color: #888; border-bottom: 1px solid #eee; padding: 12px 0 4px; margin-top: 16px; }
+      .activity-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
+      .activity-icon { font-size: 16px; width: 28px; text-align: center; }
+      .activity-who { font-size: 11px; font-weight: 700; color: #2A9D8F; }
+      .activity-what { margin: 2px 0; }
+      .activity-proj { font-size: 11px; color: #999; }
+      .activity-time { font-size: 10px; color: #aaa; }
+      @media print { body { padding: 16px; } }
+    </style></head><body>
+    <h1>${titulo}</h1>
+    <div class="sub">${subtitulo || 'Todos os registros'} · Gerado em ${hoje}</div>
+    ${feedHTML}
+    <script>window.onload=()=>window.print()<\/script>
+    </body></html>`);
+  win.document.close();
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1940,7 +2536,20 @@ function refreshCurrentView() {
   if (id === 'tab-dashboard') renderDashboard();
   else if (id === 'tab-projetos') { renderProjectList(); if (currentProj) renderDetail(currentProj); }
   else if (id === 'tab-briefing') renderBriefing();
+  else if (id === 'tab-hoje') renderHoje();
   else if (id === 'tab-meeting') renderMeeting();
+  // Atualiza badge do "Fazer Hoje" em qualquer aba
+  updateHojeBadge();
+}
+
+function updateHojeBadge() {
+  const badge = document.getElementById('badge-hoje');
+  if (!badge || !state.projects) return;
+  const pending = state.projects
+    .flatMap(p => p.actions)
+    .filter(a => a.status !== 'concluido').length;
+  badge.textContent = pending;
+  badge.style.display = pending ? 'inline-block' : 'none';
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -2172,12 +2781,13 @@ function showTab(name) {
   document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
-  const navMap={dashboard:0,projetos:1,briefing:2,reuniao:3,atividade:4,notificacoes:5,guia:6};
+  const navMap={dashboard:0,projetos:1,briefing:2,hoje:3,reuniao:4,atividade:5,notificacoes:6,guia:7};
   const btns=document.querySelectorAll('.nav-item');
   if(navMap[name]!==undefined) btns[navMap[name]].classList.add('active');
   if (name === 'dashboard')    renderDashboard();
   if (name === 'projetos')     renderProjectList();
   if (name === 'briefing')     renderBriefing();
+  if (name === 'hoje')         renderHoje();
   if (name === 'reuniao')      renderMeeting();
   if (name === 'atividade')    { loadActivity(true); }
   if (name === 'notificacoes') { loadNotifications(); }
@@ -2245,6 +2855,208 @@ function renderDashboard() {
       <span class="dash-item-txt">${a.text}</span>
       <span style="color:var(--teal);font-size:11px;font-weight:600">✓</span>
     </div>`).join('') || '<div class="empty-msg">Nenhuma ação concluída ainda.</div>';
+
+  renderDashCharts(all, allActions);
+  updateHojeBadge();
+}
+
+// ── DASHBOARD CHARTS ──────────────────────────────────────────
+const CHART_COLORS = {
+  urgente:  '#E76F51',
+  andamento:'#2A9D8F',
+  afazer:   '#8ECAE6',
+  bloqueado:'#E9C46A',
+  concluido:'#264653',
+};
+const STATUS_LABEL = {
+  urgente:'Urgente', andamento:'Andamento', afazer:'A Fazer',
+  bloqueado:'Bloqueado', concluido:'Concluído'
+};
+const STATUS_ORDER = ['urgente','andamento','afazer','bloqueado','concluido'];
+
+// Instâncias Chart.js — destruir antes de recriar
+const _charts = {};
+function destroyChart(key) {
+  if (_charts[key]) { _charts[key].destroy(); delete _charts[key]; }
+}
+
+function renderDashCharts(projects, allActions) {
+  if (typeof Chart === 'undefined') return; // CDN ainda carregando
+
+  // ── 1. BURNDOWN HORIZONTAL STACKED ────────────────────────
+  destroyChart('burndown');
+  const bdCanvas = document.getElementById('chart-burndown');
+  if (bdCanvas && projects.length) {
+    // Altura dinâmica: 38px por projeto
+    const bh = Math.max(120, projects.length * 42);
+    bdCanvas.style.height = bh + 'px';
+    bdCanvas.height = bh;
+
+    const labels = projects.map(p => p.name.length > 24 ? p.name.slice(0,22)+'…' : p.name);
+    const datasets = STATUS_ORDER.map(st => ({
+      label: STATUS_LABEL[st],
+      data: projects.map(p => p.actions.filter(a => a.status === st).length),
+      backgroundColor: CHART_COLORS[st],
+      borderRadius: 3,
+      borderSkipped: false,
+    }));
+
+    _charts.burndown = new Chart(bdCanvas.getContext('2d'), {
+      type: 'bar',
+      data: { labels, datasets },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.x}`
+            }
+          }
+        },
+        scales: {
+          x: {
+            stacked: true,
+            grid: { color: 'rgba(255,255,255,.06)' },
+            ticks: { color: '#8899aa', font: { size: 11 }, stepSize: 1 }
+          },
+          y: {
+            stacked: true,
+            grid: { display: false },
+            ticks: { color: '#aabbcc', font: { size: 11 } }
+          }
+        }
+      }
+    });
+
+    // Legenda manual
+    document.getElementById('legend-burndown').innerHTML =
+      STATUS_ORDER.map(st =>
+        `<span><span class="dash-legend-dot" style="background:${CHART_COLORS[st]}"></span>${STATUS_LABEL[st]}</span>`
+      ).join('');
+  }
+
+  // ── 2. DONUT DE STATUS GLOBAL ─────────────────────────────
+  destroyChart('donut');
+  const donutCanvas = document.getElementById('chart-donut');
+  if (donutCanvas && allActions.length) {
+    const counts = STATUS_ORDER.map(st => allActions.filter(a => a.status === st).length);
+    _charts.donut = new Chart(donutCanvas.getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels: STATUS_ORDER.map(st => STATUS_LABEL[st]),
+        datasets: [{
+          data: counts,
+          backgroundColor: STATUS_ORDER.map(st => CHART_COLORS[st]),
+          borderWidth: 2,
+          borderColor: '#1A2535',
+          hoverOffset: 6,
+        }]
+      },
+      options: {
+        responsive: false,
+        cutout: '62%',
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => ` ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed/allActions.length*100)}%)`
+            }
+          }
+        }
+      }
+    });
+
+    // Legenda e total no centro via CSS overlay
+    document.getElementById('legend-donut').innerHTML =
+      STATUS_ORDER.map((st, i) => counts[i] > 0
+        ? `<span><span class="dash-legend-dot" style="background:${CHART_COLORS[st]}"></span>${STATUS_LABEL[st]} (${counts[i]})</span>`
+        : '').join('');
+  }
+
+  // ── 3. VELOCIDADE SEMANAL ─────────────────────────────────
+  // Usa _activityData se disponível (Supabase), senão conta concluídos por semana pelos dados locais
+  destroyChart('velocity');
+  const velCanvas = document.getElementById('chart-velocity');
+  if (!velCanvas) return;
+
+  // Gera rótulos das últimas 8 semanas
+  function weekLabel(offsetWeeks) {
+    const d = new Date();
+    d.setDate(d.getDate() - offsetWeeks * 7);
+    return `S${getWeekNumber(d)} (${d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})})`;
+  }
+  function getWeekNumber(d) {
+    const s = new Date(d.getFullYear(), 0, 1);
+    return Math.ceil(((d - s) / 86400000 + s.getDay() + 1) / 7);
+  }
+  function getWeekOffset(dateStr) {
+    if (!dateStr) return -1;
+    const d = new Date(dateStr);
+    const now = new Date();
+    const diffDays = Math.floor((now - d) / 86400000);
+    return Math.floor(diffDays / 7);
+  }
+
+  const weekCounts = Array(8).fill(0);
+
+  // Tenta usar _activityData (registros Supabase de concluídos)
+  if (typeof _activityData !== 'undefined' && _activityData.length) {
+    _activityData
+      .filter(d => d.change_type === 'concluido')
+      .forEach(d => {
+        const off = getWeekOffset(d.created_at);
+        if (off >= 0 && off < 8) weekCounts[off]++;
+      });
+  } else {
+    // Fallback: ações concluídas com deadline nas últimas 8 semanas
+    allActions.filter(a => a.status === 'concluido').forEach(a => {
+      const off = getWeekOffset(a.deadline);
+      if (off >= 0 && off < 8) weekCounts[off]++;
+    });
+  }
+
+  // Inverte: índice 7 = mais antigo, 0 = esta semana
+  const labels8 = Array.from({length:8}, (_,i) => weekLabel(7-i));
+  const data8   = [...weekCounts].reverse();
+  const maxVal  = Math.max(...data8, 1);
+
+  _charts.velocity = new Chart(velCanvas.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: labels8,
+      datasets: [{
+        label: 'Concluídas',
+        data: data8,
+        backgroundColor: data8.map((v,i) => i === 7
+          ? 'rgba(42,157,143,.9)'   // esta semana destacada
+          : 'rgba(42,157,143,.35)'),
+        borderRadius: 4,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y} concluída${ctx.parsed.y!==1?'s':''}` } }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { color: '#8899aa', font: { size: 10 } }
+        },
+        y: {
+          grid: { color: 'rgba(255,255,255,.05)' },
+          ticks: { color: '#8899aa', font: { size: 10 }, stepSize: 1, max: maxVal + 1 },
+          beginAtZero: true,
+        }
+      }
+    }
+  });
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -2416,6 +3228,14 @@ const KANBAN_COLS = [
 ];
 const STATUS_ORDER = ['afazer','andamento','urgente','bloqueado','concluido'];
 
+const kanbanFilter = {}; // { [projId]: resp }
+
+function setKanbanFilter(projId, resp) {
+  kanbanFilter[projId] = resp;
+  const p = state.projects.find(x => x.id === projId);
+  if (p) renderKanbanView(p);
+}
+
 function kanbanMoveStatus(projId, actionId, dir) {
   const p = state.projects.find(x => x.id === projId);
   const a = p.actions.find(x => x.id === actionId);
@@ -2428,36 +3248,70 @@ function kanbanMoveStatus(projId, actionId, dir) {
 
 function renderKanbanView(p) {
   const el = document.getElementById('actions-view-' + p.id);
+  const activeResp = kanbanFilter[p.id] || '';
+
+  // Collect unique responsáveis for this project
+  const resps = [...new Set(p.actions.map(a => a.resp).filter(Boolean))].sort();
+
+  // Filter bar HTML
+  const filterBar = `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--surface2);border-bottom:1px solid var(--border);flex-wrap:wrap">
+      <span style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Responsável:</span>
+      <select onchange="setKanbanFilter('${p.id}',this.value)"
+              style="border:1px solid var(--border2);border-radius:var(--rs);padding:5px 10px;font-size:12px;font-family:var(--font);color:var(--text);background:var(--surface);outline:none;cursor:pointer">
+        <option value="" ${activeResp===''?'selected':''}>Todos</option>
+        ${resps.map(r => `<option value="${r}" ${activeResp===r?'selected':''}>${r}</option>`).join('')}
+      </select>
+      ${activeResp ? `<span style="font-size:11px;color:var(--amber2);background:var(--lamber);border:1px solid rgba(233,196,106,.25);padding:2px 10px;border-radius:10px">Filtrando: ${activeResp}</span>` : ''}
+    </div>`;
+
   const cols = KANBAN_COLS.map(col => {
-    const cards = p.actions.filter(a => a.status === col.key);
+    // Filter by status, then optionally by resp
+    let cards = p.actions.filter(a => a.status === col.key);
+    if (activeResp) cards = cards.filter(a => a.resp === activeResp);
+
+    // Sort by deadline: com prazo primeiro (asc), sem prazo por último
+    cards = [...cards].sort((a, b) => {
+      const da = a.deadline || '9999-99-99';
+      const db = b.deadline || '9999-99-99';
+      return da < db ? -1 : da > db ? 1 : 0;
+    });
+
+    const totalCol = p.actions.filter(a => a.status === col.key).length;
+    const countLabel = activeResp && cards.length !== totalCol
+      ? `${cards.length}/${totalCol}`
+      : `${cards.length}`;
+
     return `
       <div class="kanban-col">
         <div class="kanban-col-hd" style="${col.hd}">
           <span>${col.label}</span>
-          <span style="opacity:.6">${cards.length}</span>
+          <span style="opacity:.6">${countLabel}</span>
         </div>
-        ${cards.length === 0 ? '<div class="kanban-empty">—</div>' :
-          cards.map(a => {
-            const idx = STATUS_ORDER.indexOf(col.key);
-            return `
-            <div class="kanban-card" onclick="openActionModal('${p.id}','${a.id}')">
-              ${a.tema ? `<div style="font-size:10px;font-weight:700;color:var(--amber2);margin-bottom:4px;letter-spacing:.3px">${a.tema}</div>` : ''}
-              <div class="kanban-card-title">${a.text}</div>
-              <div class="kanban-card-meta">
-                <span class="kanban-card-resp">${a.resp}</span>
-                ${a.deadline ? `<span class="kanban-card-dead ${deadClass(a.deadline)}">${fmtDate(a.deadline)}</span>` : ''}
-              </div>
-              ${a.notes ? `<div class="kanban-card-notes">${a.notes}</div>` : ''}
-              <div class="kanban-move-btn" onclick="event.stopPropagation()">
-                ${idx > 0 ? `<span onclick="kanbanMoveStatus('${p.id}','${a.id}',-1)">← ${STATUS_LABEL[STATUS_ORDER[idx-1]]}</span>` : ''}
-                ${idx < STATUS_ORDER.length-1 ? `<span onclick="kanbanMoveStatus('${p.id}','${a.id}',1)">→ ${STATUS_LABEL[STATUS_ORDER[idx+1]]}</span>` : ''}
-              </div>
-            </div>`;
-          }).join('')
+        ${cards.length === 0
+          ? `<div class="kanban-empty">${activeResp ? 'Nenhuma ação para ' + activeResp : '—'}</div>`
+          : cards.map(a => {
+              const idx = STATUS_ORDER.indexOf(col.key);
+              const isOverdueCard = a.deadline && isOverdue(a.deadline);
+              return `
+              <div class="kanban-card" onclick="openActionModal('${p.id}','${a.id}')">
+                ${a.tema ? `<div style="font-size:10px;font-weight:700;color:var(--amber2);margin-bottom:4px;letter-spacing:.3px">${a.tema}</div>` : ''}
+                <div class="kanban-card-title">${a.text}</div>
+                <div class="kanban-card-meta">
+                  <span class="kanban-card-resp">${a.resp}</span>
+                  ${a.deadline ? `<span class="kanban-card-dead ${deadClass(a.deadline)}">${isOverdueCard ? '⚠ ' : ''}${fmtDate(a.deadline)}</span>` : ''}
+                </div>
+                ${a.notes ? `<div class="kanban-card-notes">${a.notes}</div>` : ''}
+                <div class="kanban-move-btn" onclick="event.stopPropagation()">
+                  ${idx > 0 ? `<span onclick="kanbanMoveStatus('${p.id}','${a.id}',-1)">← ${STATUS_LABEL[STATUS_ORDER[idx-1]]}</span>` : ''}
+                  ${idx < STATUS_ORDER.length-1 ? `<span onclick="kanbanMoveStatus('${p.id}','${a.id}',1)">→ ${STATUS_LABEL[STATUS_ORDER[idx+1]]}</span>` : ''}
+                </div>
+              </div>`;
+            }).join('')
         }
       </div>`;
   });
-  el.innerHTML = `<div class="kanban-board">${cols.join('')}</div>`;
+  el.innerHTML = filterBar + `<div class="kanban-board">${cols.join('')}</div>`;
 }
 
 // ── TIMELINE ─────────────────────────────────────────────────────────────────
@@ -2690,6 +3544,211 @@ function renderBriefing() {
         </div>
       </div>
     </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// FAZER HOJE
+// ══════════════════════════════════════════════════════════════
+let hojeGrupo = 'status'; // 'status' | 'proj' | 'resp' | 'flat'
+
+function setHojeGrupo(modo) {
+  hojeGrupo = modo;
+  ['status','proj','resp','flat'].forEach(m => {
+    const btn = document.getElementById('hj-grp-' + m);
+    if (btn) btn.classList.toggle('active', m === modo);
+  });
+  renderHoje();
+}
+
+function limparFiltrosHoje() {
+  document.getElementById('hj-search').value = '';
+  document.getElementById('hj-proj').value = '';
+  document.getElementById('hj-resp').value = '';
+  document.getElementById('hj-status').value = '';
+  document.getElementById('hj-prazo').value = '';
+  renderHoje();
+}
+
+function isToday(deadline) {
+  if (!deadline) return false;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const d = new Date(deadline + 'T00:00:00');
+  return d.getTime() === today.getTime();
+}
+
+function isOverdue(deadline) {
+  if (!deadline) return false;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const d = new Date(deadline + 'T00:00:00');
+  return d < today;
+}
+
+function renderHoje() {
+  // Populate project filter if empty
+  const projSel = document.getElementById('hj-proj');
+  if (projSel && projSel.options.length <= 1) {
+    state.projects.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = p.name;
+      projSel.appendChild(opt);
+    });
+  }
+
+  // Gather filter values
+  const search  = (document.getElementById('hj-search')?.value || '').toLowerCase().trim();
+  const projId  = document.getElementById('hj-proj')?.value || '';
+  const resp    = document.getElementById('hj-resp')?.value || '';
+  const status  = document.getElementById('hj-status')?.value || '';
+  const prazo   = document.getElementById('hj-prazo')?.value || '';
+
+  // Collect all non-completed actions
+  let all = state.projects.flatMap(p =>
+    p.actions.map(a => ({...a, projName: p.name, projId: p.id, projCat: p.cat}))
+  ).filter(a => a.status !== 'concluido');
+
+  // Apply filters
+  if (projId)  all = all.filter(a => a.projId === projId);
+  if (resp)    all = all.filter(a => a.resp === resp);
+  if (status)  all = all.filter(a => a.status === status);
+  if (search)  all = all.filter(a =>
+    (a.text||'').toLowerCase().includes(search) ||
+    (a.tema||'').toLowerCase().includes(search) ||
+    (a.notes||'').toLowerCase().includes(search) ||
+    a.projName.toLowerCase().includes(search)
+  );
+  if (prazo === 'hoje')     all = all.filter(a => isToday(a.deadline));
+  if (prazo === 'atrasado') all = all.filter(a => isOverdue(a.deadline));
+  if (prazo === 'semana')   all = all.filter(a => isThisWeek(a.deadline) && !isOverdue(a.deadline));
+
+  // Sort within each group: urgente first, then by deadline
+  const statusOrder = { urgente:0, andamento:1, bloqueado:2, afazer:3 };
+  all.sort((a,b) => {
+    const so = (statusOrder[a.status]||9) - (statusOrder[b.status]||9);
+    if (so !== 0) return so;
+    const da = a.deadline || '9999-99-99';
+    const db = b.deadline || '9999-99-99';
+    return da < db ? -1 : da > db ? 1 : 0;
+  });
+
+  // Stats line
+  const urgCount   = all.filter(a => a.status === 'urgente').length;
+  const atrasCount = all.filter(a => isOverdue(a.deadline)).length;
+  const hojCount   = all.filter(a => isToday(a.deadline)).length;
+  document.getElementById('hoje-stats').innerHTML =
+    `<span><strong>${all.length}</strong> atividades</span>` +
+    (urgCount   ? `<span>🔥 <strong>${urgCount}</strong> urgente${urgCount>1?'s':''}</span>` : '') +
+    (atrasCount ? `<span style="color:var(--coral2)">⚠ <strong>${atrasCount}</strong> atrasada${atrasCount>1?'s':''}</span>` : '') +
+    (hojCount   ? `<span style="color:var(--amber2)">📅 <strong>${hojCount}</strong> vence hoje</span>` : '');
+
+  // Badge on nav
+  const badge = document.getElementById('badge-hoje');
+  if (badge) {
+    const pending = state.projects.flatMap(p => p.actions).filter(a => a.status !== 'concluido').length;
+    badge.textContent = pending;
+    badge.style.display = pending ? '' : 'none';
+  }
+
+  // Update subtitle
+  const sub = document.getElementById('hoje-subtitle');
+  if (sub) {
+    const hoje = new Date().toLocaleDateString('pt-BR', {weekday:'long', day:'numeric', month:'long'});
+    sub.textContent = hoje;
+  }
+
+  // Render list
+  const listEl = document.getElementById('hoje-list');
+  if (!listEl) return;
+
+  if (!all.length) {
+    listEl.innerHTML = '<div class="hoje-empty">✅ Nenhuma atividade encontrada com os filtros aplicados.</div>';
+    return;
+  }
+
+  function itemHTML(a) {
+    const deadCls = deadClass(a.deadline);
+    const statusLabel = { urgente:'🔥 Urgente', andamento:'🔄 Andamento', afazer:'📌 A Fazer', bloqueado:'⚠️ Bloqueado' };
+    return `
+      <div class="hoje-item ${a.status}">
+        <div class="hoje-check" title="Marcar como concluído"
+             onclick="quickDoneHoje('${a.projId}','${a.id}',this)">✓</div>
+        <div class="hoje-item-body">
+          <div class="hoje-item-proj">${a.projName} · <span class="status-badge s-${a.status}" style="font-size:9px;padding:1px 6px">${statusLabel[a.status]||a.status}</span></div>
+          <div class="hoje-item-text">
+            ${a.tema ? `<span class="hoje-item-tema">${a.tema}</span>` : ''}${a.text}
+          </div>
+          ${a.notes ? `<div class="hoje-item-notes">${a.notes}</div>` : ''}
+        </div>
+        <span class="hoje-item-resp">${a.resp||'—'}</span>
+        <span class="hoje-item-dead ${deadCls}">${fmtDate(a.deadline)}</span>
+        <div class="hoje-item-act">
+          <button class="btn-open" onclick="goToAction('${a.projId}','${a.id}')" title="Abrir em Projetos">↗</button>
+          <button class="btn-done-q" onclick="quickDoneHoje('${a.projId}','${a.id}',this)" title="Concluir">✓ Feito</button>
+        </div>
+      </div>`;
+  }
+
+  if (hojeGrupo === 'flat') {
+    listEl.innerHTML = all.map(itemHTML).join('');
+    return;
+  }
+
+  // Group data
+  let groups = {};
+  let groupOrder = [];
+
+  if (hojeGrupo === 'status') {
+    groupOrder = ['urgente','andamento','afazer','bloqueado'];
+    const labels = { urgente:'🔥 Urgente', andamento:'🔄 Em Andamento', afazer:'📌 A Fazer', bloqueado:'⚠️ Bloqueado' };
+    groupOrder.forEach(s => {
+      const items = all.filter(a => a.status === s);
+      if (items.length) groups[s] = { label: labels[s], items };
+    });
+  } else if (hojeGrupo === 'proj') {
+    all.forEach(a => {
+      if (!groups[a.projId]) { groups[a.projId] = { label: a.projName, items: [] }; groupOrder.push(a.projId); }
+      groups[a.projId].items.push(a);
+    });
+  } else if (hojeGrupo === 'resp') {
+    all.forEach(a => {
+      const r = a.resp || 'Sem responsável';
+      if (!groups[r]) { groups[r] = { label: r, items: [] }; groupOrder.push(r); }
+      groups[r].items.push(a);
+    });
+  }
+
+  listEl.innerHTML = groupOrder.map(key => {
+    const g = groups[key];
+    if (!g) return '';
+    return `
+      <div class="hoje-group">
+        <div class="hoje-group-hd">
+          ${g.label}
+          <span class="count-pill">${g.items.length}</span>
+        </div>
+        ${g.items.map(itemHTML).join('')}
+      </div>`;
+  }).join('');
+}
+
+function quickDoneHoje(projId, actionId, el) {
+  const p = state.projects.find(x => x.id === projId);
+  if (!p) return;
+  const a = p.actions.find(x => x.id === actionId);
+  if (!a) return;
+  a.status = 'concluido';
+  saveState();
+  // Remove item visually
+  const item = el.closest('.hoje-item');
+  if (item) {
+    item.style.transition = 'opacity .3s, transform .3s';
+    item.style.opacity = '0';
+    item.style.transform = 'translateX(20px)';
+    setTimeout(() => renderHoje(), 350);
+  } else {
+    renderHoje();
+  }
+  showToast('✅ Ação marcada como concluída');
 }
 
 // ══════════════════════════════════════════════════════════════
