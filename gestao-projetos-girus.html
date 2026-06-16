@@ -8,7 +8,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gestão de Projetos — Girus</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" async></script>
 <style>
 
 :root {
@@ -1620,7 +1620,7 @@ body {
     <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
       <div id="sidebar-user" style="font-size:10px;color:var(--text3);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
       <button onclick="doLogout()" style="width:100%;padding:5px 8px;background:none;border:1px solid var(--border2);border-radius:var(--rs);color:var(--text3);font-size:11px;cursor:pointer;font-family:var(--font);text-align:left" onmouseover="this.style.color='var(--coral2)'" onmouseout="this.style.color='var(--text3)'">⎋ Sair</button>
-      <div style="font-size:9px;color:var(--text3);opacity:0.5;margin-top:4px;text-align:right">v3.0 · 16/06</div>
+      <div style="font-size:9px;color:var(--text3);opacity:0.5;margin-top:4px;text-align:right">v3.0.3 · 16/06</div>
       <div id="data-ts" style="font-size:9px;color:var(--text3);opacity:0.6;margin-top:2px;text-align:right"></div>
     </div>
   </div>
@@ -2868,11 +2868,7 @@ const CHART_COLORS = {
   bloqueado:'#E9C46A',
   concluido:'#264653',
 };
-const STATUS_LABEL = {
-  urgente:'Urgente', andamento:'Andamento', afazer:'A Fazer',
-  bloqueado:'Bloqueado', concluido:'Concluído'
-};
-const STATUS_ORDER = ['urgente','andamento','afazer','bloqueado','concluido'];
+const CHART_STATUS_ORDER = ['urgente','andamento','afazer','bloqueado','concluido'];
 
 // Instâncias Chart.js — destruir antes de recriar
 const _charts = {};
@@ -2893,7 +2889,7 @@ function renderDashCharts(projects, allActions) {
     bdCanvas.height = bh;
 
     const labels = projects.map(p => p.name.length > 24 ? p.name.slice(0,22)+'…' : p.name);
-    const datasets = STATUS_ORDER.map(st => ({
+    const datasets = CHART_STATUS_ORDER.map(st => ({
       label: STATUS_LABEL[st],
       data: projects.map(p => p.actions.filter(a => a.status === st).length),
       backgroundColor: CHART_COLORS[st],
@@ -2933,7 +2929,7 @@ function renderDashCharts(projects, allActions) {
 
     // Legenda manual
     document.getElementById('legend-burndown').innerHTML =
-      STATUS_ORDER.map(st =>
+      CHART_STATUS_ORDER.map(st =>
         `<span><span class="dash-legend-dot" style="background:${CHART_COLORS[st]}"></span>${STATUS_LABEL[st]}</span>`
       ).join('');
   }
@@ -2942,14 +2938,14 @@ function renderDashCharts(projects, allActions) {
   destroyChart('donut');
   const donutCanvas = document.getElementById('chart-donut');
   if (donutCanvas && allActions.length) {
-    const counts = STATUS_ORDER.map(st => allActions.filter(a => a.status === st).length);
+    const counts = CHART_STATUS_ORDER.map(st => allActions.filter(a => a.status === st).length);
     _charts.donut = new Chart(donutCanvas.getContext('2d'), {
       type: 'doughnut',
       data: {
-        labels: STATUS_ORDER.map(st => STATUS_LABEL[st]),
+        labels: CHART_STATUS_ORDER.map(st => STATUS_LABEL[st]),
         datasets: [{
           data: counts,
-          backgroundColor: STATUS_ORDER.map(st => CHART_COLORS[st]),
+          backgroundColor: CHART_STATUS_ORDER.map(st => CHART_COLORS[st]),
           borderWidth: 2,
           borderColor: '#1A2535',
           hoverOffset: 6,
@@ -2971,7 +2967,7 @@ function renderDashCharts(projects, allActions) {
 
     // Legenda e total no centro via CSS overlay
     document.getElementById('legend-donut').innerHTML =
-      STATUS_ORDER.map((st, i) => counts[i] > 0
+      CHART_STATUS_ORDER.map((st, i) => counts[i] > 0
         ? `<span><span class="dash-legend-dot" style="background:${CHART_COLORS[st]}"></span>${STATUS_LABEL[st]} (${counts[i]})</span>`
         : '').join('');
   }
@@ -3839,58 +3835,299 @@ function renderMeeting() {
           ${(() => {
             const actions = sortedMeetActions(p.id, p.actions);
             const rowFn = a => `
-              <tr class="${a.status==='concluido'?'done-row':''}"
-                  style="cursor:pointer" title="Editar ação"
-                  onclick="goToAction('${p.id}','${a.id}')"
-                  onmouseover="this.style.background='var(--surface3)'"
-                  onmouseout="this.style.background=''">
-                <td>
-                  ${a.tema ? `<span style="font-size:10px;font-weight:700;background:var(--lamber);color:var(--amber2);border:1px solid rgba(233,196,106,.25);padding:1px 7px;border-radius:10px;margin-right:5px">${a.tema}</span>` : ''}
-                  ${a.text}
-                </td>
-                <td><span class="status-badge s-${a.status}">${STATUS_LABEL[a.status]||a.status}</span></td>
-                <td>${a.resp}</td>
+              <tr onclick="openActionModal('${p.id}','${a.id}')" style="cursor:pointer" onmouseover="this.style.background='rgba(255,255,255,.04)'" onmouseout="this.style.background=''">
+                <td>${a.text || ''}</td>
+                <td><span class="status-pill status-${a.status}">${STATUS_LABEL[a.status]||a.status}</span></td>
+                <td>${a.resp || '—'}</td>
                 <td class="${deadClass(a.deadline)}">${fmtDate(a.deadline)}</td>
-                <td style="color:var(--text3);font-style:italic;font-size:11px">${a.notes}</td>
+                <td style="color:var(--text2);font-size:12px">${(a.notes||'').substring(0,80)+((a.notes||'').length>80?'…':'')}</td>
               </tr>`;
-            const s = meetSort[p.id];
-            return (s && s.col) ? actions.map(rowFn).join('') : temaGroupRows(p.actions, rowFn);
+            return actions.map(rowFn).join('');
           })()}
           </tbody>
         </table>
-        ${p.notes ? `<div style="padding:8px 12px;font-size:11px;color:var(--gray4);font-style:italic;border-top:1px solid var(--gray2)">📝 ${p.notes}</div>` : ''}
       </div>`;
   }).join('');
 }
 
-function saveLog() {
-  const meetDate = document.getElementById('meet-date').value || new Date().toISOString().slice(0,10);
-  const sprint    = document.getElementById('meet-sprint').value || '';
-  const next      = document.getElementById('meet-next').value || '';
-  const entry = {
-    date:     meetDate,
-    sprint:   sprint,
-    next:     next,
-    decisoes: document.getElementById('log-decisoes').value,
-    atencao:  document.getElementById('log-atencao').value,
-    obs:      document.getElementById('log-obs').value,
-    savedAt:  new Date().toISOString(),
-  };
-  if (!state.logs) state.logs = [];
-  // Upsert by date
-  const idx = state.logs.findIndex(l => l.date === meetDate);
-  if (idx >= 0) state.logs[idx] = entry;
-  else state.logs.unshift(entry);
-  // Keep max 52 entries
-  if (state.logs.length > 52) state.logs = state.logs.slice(0, 52);
-  // Compat: keep state.log pointing to latest
-  state.log = entry;
-  saveState();
-  const btn = document.querySelector('.btn-save-log');
-  btn.textContent = 'Salvo ✓';
-  setTimeout(() => btn.textContent = 'Salvar Registro', 2000);
-  renderMeetingHistory();
+// ══════════════════════════════════════════════════════════════
+// MODAIS
+// ══════════════════════════════════════════════════════════════
+function closeModal(id) {
+  document.getElementById(id).style.display = 'none';
 }
+
+function openProjModal(projId) {
+  const modal  = document.getElementById('modal-proj');
+  const delBtn = document.getElementById('mpj-del-btn');
+  if (projId) {
+    const p = state.projects.find(x => x.id === projId);
+    if (!p) return;
+    document.getElementById('mpj-title').textContent = 'Editar Projeto';
+    document.getElementById('mpj-id').value     = p.id;
+    document.getElementById('mpj-name').value   = p.name;
+    document.getElementById('mpj-cat').value    = p.cat;
+    document.getElementById('mpj-status').value = p.status;
+    document.getElementById('mpj-resp').value   = p.resp  || '';
+    document.getElementById('mpj-phase').value  = p.phase || '';
+    document.getElementById('mpj-notes').value  = p.notes || '';
+    delBtn.style.display = 'inline-flex';
+  } else {
+    document.getElementById('mpj-title').textContent = 'Novo Projeto';
+    document.getElementById('mpj-id').value     = '';
+    document.getElementById('mpj-name').value   = '';
+    document.getElementById('mpj-cat').value    = 'Contrato';
+    document.getElementById('mpj-status').value = 'andamento';
+    document.getElementById('mpj-resp').value   = '';
+    document.getElementById('mpj-phase').value  = '';
+    document.getElementById('mpj-notes').value  = '';
+    delBtn.style.display = 'none';
+  }
+  modal.style.display = 'flex';
+}
+
+function saveProject() {
+  const id   = document.getElementById('mpj-id').value;
+  const name = document.getElementById('mpj-name').value.trim();
+  if (!name) { showToast('⚠️ Nome é obrigatório'); return; }
+  if (id) {
+    const p = state.projects.find(x => x.id === id);
+    if (p) {
+      const oldStatus = p.status;
+      p.name   = name;
+      p.cat    = document.getElementById('mpj-cat').value;
+      p.status = document.getElementById('mpj-status').value;
+      p.resp   = document.getElementById('mpj-resp').value.trim();
+      p.phase  = document.getElementById('mpj-phase').value.trim();
+      p.notes  = document.getElementById('mpj-notes').value.trim();
+      if (p.status !== oldStatus) logActivity(p.id, p.name, '—', 'status', `${oldStatus} → ${p.status}`);
+    }
+  } else {
+    const np = {
+      id: uid(), name,
+      cat:     document.getElementById('mpj-cat').value,
+      status:  document.getElementById('mpj-status').value,
+      resp:    document.getElementById('mpj-resp').value.trim(),
+      phase:   document.getElementById('mpj-phase').value.trim(),
+      notes:   document.getElementById('mpj-notes').value.trim(),
+      actions: []
+    };
+    state.projects.push(np);
+    logActivity(np.id, np.name, '—', 'status', 'Projeto criado');
+  }
+  saveState();
+  closeModal('modal-proj');
+  renderProjectList();
+  if (id && currentProj === id) renderDetail(id);
+  renderDashboard();
+  showToast('✅ Projeto salvo');
+}
+
+function deleteProject() {
+  const id = document.getElementById('mpj-id').value;
+  if (!id) return;
+  const p = state.projects.find(x => x.id === id);
+  if (!confirm(`Excluir "${p?.name}"? Não pode ser desfeito.`)) return;
+  logActivity(id, p.name, '—', 'excluido', 'Projeto excluído');
+  state.projects = state.projects.filter(x => x.id !== id);
+  saveState();
+  closeModal('modal-proj');
+  if (currentProj === id) {
+    currentProj = null;
+    const d = document.getElementById('proj-detail');
+    if (d) d.style.display = 'none';
+  }
+  renderProjectList();
+  renderDashboard();
+  showToast('🗑 Projeto excluído');
+}
+
+function openActionModal(projId, actionId) {
+  const modal  = document.getElementById('modal-action');
+  const delBtn = document.getElementById('mac-del-btn');
+  const proj   = state.projects.find(x => x.id === projId);
+  // Preenche datalist com temas existentes no projeto
+  const temas  = [...new Set((proj?.actions || []).map(a => a.tema).filter(Boolean))].sort();
+  document.getElementById('mac-tema-list').innerHTML = temas.map(t => `<option value="${t}">`).join('');
+  document.getElementById('mac-proj-id').value = projId;
+  if (actionId) {
+    const a = proj?.actions.find(x => x.id === actionId);
+    if (!a) return;
+    document.getElementById('mac-title').textContent  = 'Editar Ação';
+    document.getElementById('mac-action-id').value   = a.id;
+    document.getElementById('mac-text').value        = a.text     || '';
+    document.getElementById('mac-tema').value        = a.tema     || '';
+    document.getElementById('mac-status').value      = a.status   || 'afazer';
+    document.getElementById('mac-resp').value        = a.resp     || 'Cappelini';
+    document.getElementById('mac-deadline').value    = a.deadline || '';
+    document.getElementById('mac-notes').value       = a.notes    || '';
+    delBtn.style.display = 'inline-flex';
+  } else {
+    document.getElementById('mac-title').textContent  = 'Nova Ação';
+    document.getElementById('mac-action-id').value   = '';
+    document.getElementById('mac-text').value        = '';
+    document.getElementById('mac-tema').value        = '';
+    document.getElementById('mac-status').value      = 'afazer';
+    document.getElementById('mac-resp').value        = 'Cappelini';
+    document.getElementById('mac-deadline').value    = '';
+    document.getElementById('mac-notes').value       = '';
+    delBtn.style.display = 'none';
+  }
+  modal.style.display = 'flex';
+  setTimeout(() => document.getElementById('mac-text').focus(), 60);
+}
+
+function saveAction() {
+  const projId   = document.getElementById('mac-proj-id').value;
+  const actionId = document.getElementById('mac-action-id').value;
+  const text     = document.getElementById('mac-text').value.trim();
+  if (!text) { showToast('⚠️ Texto da ação é obrigatório'); return; }
+  const p = state.projects.find(x => x.id === projId);
+  if (!p) return;
+  const status   = document.getElementById('mac-status').value;
+  const resp     = document.getElementById('mac-resp').value;
+  const deadline = document.getElementById('mac-deadline').value;
+  const notes    = document.getElementById('mac-notes').value.trim();
+  const tema     = document.getElementById('mac-tema').value.trim();
+  if (actionId) {
+    const a = p.actions.find(x => x.id === actionId);
+    if (a) {
+      const oldNotes = a.notes || '', oldStatus = a.status, oldDead = a.deadline;
+      a.text = text; a.tema = tema; a.status = status;
+      a.resp = resp; a.deadline = deadline; a.notes = notes;
+      if (oldStatus !== status)   logActivity(p.id, p.name, text, 'status', `${oldStatus} → ${status}`);
+      if (oldDead   !== deadline) logActivity(p.id, p.name, text, 'prazo',  `${oldDead||'—'} → ${deadline||'—'}`);
+      if (oldNotes  !== notes)    logActivity(p.id, p.name, text, 'notas',  '');
+      checkAndSendMentions(p.name, text, oldNotes, notes);
+    }
+  } else {
+    const na = { id: uid(), text, tema, status, resp, deadline, notes };
+    p.actions.push(na);
+    logActivity(p.id, p.name, text, 'nova_acao', `Status: ${status}`);
+    checkAndSendMentions(p.name, text, '', notes);
+  }
+  saveState();
+  closeModal('modal-action');
+  renderProjectList();
+  if (currentProj === projId) renderDetail(currentProj);
+  renderDashboard();
+  renderBriefing();
+  renderHoje();
+  showToast('✅ Ação salva');
+}
+
+function deleteAction() {
+  const projId   = document.getElementById('mac-proj-id').value;
+  const actionId = document.getElementById('mac-action-id').value;
+  if (!actionId) return;
+  const p = state.projects.find(x => x.id === projId);
+  const a = p?.actions.find(x => x.id === actionId);
+  if (!a || !confirm(`Excluir a ação "${a.text}"?`)) return;
+  logActivity(p.id, p.name, a.text, 'excluido', '');
+  p.actions = p.actions.filter(x => x.id !== actionId);
+  saveState();
+  closeModal('modal-action');
+  renderProjectList();
+  if (currentProj === projId) renderDetail(currentProj);
+  renderDashboard(); renderBriefing(); renderHoje();
+  showToast('🗑 Ação excluída');
+}
+
+function saveLog() {
+  const date   = document.getElementById('meet-date').value;
+  const sprint = document.getElementById('meet-sprint').value.trim();
+  const next   = document.getElementById('meet-next').value;
+  const dec    = document.getElementById('log-decisoes').value.trim();
+  const atenc  = document.getElementById('log-atencao').value.trim();
+  const obs    = document.getElementById('log-obs').value.trim();
+  if (!state.logs) state.logs = [];
+  state.logs.unshift({ date, sprint, next, decisoes: dec, atencao: atenc, obs, created_at: new Date().toISOString() });
+  if (state.logs.length > 20) state.logs = state.logs.slice(0, 20);
+  saveState();
+  renderMeetingHistory();
+  showToast('✅ Ata salva');
+}
+
+function saveAndSendToClaude() {
+  const projId = document.getElementById('mac-proj-id').value;
+  const text   = document.getElementById('mac-text').value.trim();
+  const notes  = document.getElementById('mac-notes').value.trim();
+  const resp   = document.getElementById('mac-resp').value;
+  const dead   = document.getElementById('mac-deadline').value;
+  const status = document.getElementById('mac-status').value;
+  if (!text) { showToast('⚠️ Preencha o texto da ação'); return; }
+  saveAction();
+  const p   = state.projects.find(x => x.id === projId);
+  const msg = `📌 *${p?.name || ''}*\nAção: ${text}\nStatus: ${STATUS_LABEL[status]||status} | Resp: ${resp}` +
+    (dead  ? ` | Prazo: ${fmtDate(dead)}`  : '') + '\n' +
+    (notes ? `Obs: ${notes}` : '');
+  navigator.clipboard.writeText(msg).then(() => showToast('📋 Mensagem copiada!'));
+}
+
+function exportarParaClaude() {
+  const lines     = ['# Status dos Projetos — Girus\n'];
+  const catOrder  = ['Contrato','Produto','Marketing','Estratégico','Serviço'];
+  catOrder.forEach(cat => {
+    const projs = state.projects.filter(p => p.cat === cat && p.status !== 'concluido');
+    if (!projs.length) return;
+    lines.push(`## ${cat}\n`);
+    projs.forEach(p => {
+      lines.push(`### ${p.name} [${STATUS_LABEL[p.status]||p.status}]`);
+      if (p.phase) lines.push(`Fase: ${p.phase}`);
+      if (p.notes) lines.push(`Contexto: ${p.notes}`);
+      const open = p.actions.filter(a => a.status !== 'concluido');
+      if (open.length) {
+        lines.push('Ações abertas:');
+        open.forEach(a => lines.push(
+          `- [${STATUS_LABEL[a.status]||a.status}] ${a.text}` +
+          (a.deadline ? ` — prazo: ${fmtDate(a.deadline)}` : '') +
+          (a.notes    ? `\n  Obs: ${a.notes}` : '')
+        ));
+      }
+      lines.push('');
+    });
+  });
+  navigator.clipboard.writeText(lines.join('\n')).then(() => showToast('📋 Status copiado para o Claude!'));
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast-msg');
+  t.innerHTML = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ══════════════════════════════════════════════════════════════
+// AUTH + INICIALIZAÇÃO
+// ══════════════════════════════════════════════════════════════
+supa.auth.onAuthStateChange(async (event, session) => {
+  if (session) {
+    _currentUserEmail = session.user.email;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('sidebar-user').textContent = session.user.email;
+    const now = new Date();
+    document.getElementById('hdate').textContent = now.toLocaleDateString('pt-BR', { weekday:'long', day:'numeric', month:'long' });
+    state = await loadState();
+    setupRealtime();
+    renderDashboard();
+    renderProjectList();
+    renderBriefing();
+    renderHoje();
+    renderMeeting();
+    loadNotifications();
+    updateHojeBadge();
+  } else {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('sidebar-user').textContent = '';
+  }
+});
+
+// Fechar modal ao clicar no backdrop
+['modal-proj', 'modal-action'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('click', e => { if (e.target.id === id) closeModal(id); });
+});
+
 
 
 // ══════════════════════════════════════════════════════════════
