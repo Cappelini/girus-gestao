@@ -1637,14 +1637,32 @@ async function doLogout() {
 }
 
 async function loadState() {
-  const { data } = await supa
+  let { data, error } = await supa
     .from('girus_state')
     .select('data')
     .eq('id','singleton')
     .single();
+
+  // Se falhou por auth, tenta refresh do token e repete
+  if (error) {
+    console.warn('loadState erro inicial:', error.message);
+    const { error: refreshErr } = await supa.auth.refreshSession();
+    if (!refreshErr) {
+      const res = await supa.from('girus_state').select('data').eq('id','singleton').single();
+      data  = res.data;
+      error = res.error;
+    }
+  }
+
+  if (error) {
+    console.error('loadState falhou após refresh:', error.message);
+    // Mostra aviso visível ao usuário
+    const ind = document.getElementById('sync-indicator');
+    if (ind) { ind.textContent = '⚠️ Erro ao carregar dados — recarregue a página'; ind.style.display = 'block'; ind.style.color = '#f87171'; }
+  }
+
   if (data?.data) {
     const s = data.data;
-    // Migração: garante projetos novos do INITIAL_DATA
     const ids = new Set(s.projects.map(p => p.id));
     const toAdd = INITIAL_DATA.projects.filter(p => !ids.has(p.id));
     if (toAdd.length) { s.projects.push(...toAdd); }
