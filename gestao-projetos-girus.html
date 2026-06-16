@@ -1,0 +1,3532 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestão de Projetos — Girus</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+
+:root {
+  --bg:       #0D1117;
+  --surface:  #161B22;
+  --surface2: #21262D;
+  --surface3: #2D333B;
+  --border:   #30363D;
+  --border2:  #444C56;
+  --text:     #E6EDF3;
+  --text2:    #8B949E;
+  --text3:    #6E7681;
+
+  --navy:     #1B3A5C;
+  --navy2:    #3B6EA8;
+  --coral:    #E8604C;
+  --coral2:   #FF7A62;
+  --teal:     #2A9D8F;
+  --teal2:    #3EC9BB;
+  --amber:    #E9C46A;
+  --amber2:   #F0D080;
+  --purple:   #7B3FA0;
+  --green:    #2E7D32;
+
+  --lnavy:    rgba(59,110,168,.2);
+  --lteal:    rgba(42,157,143,.15);
+  --lcoral:   rgba(232,96,76,.15);
+  --lamber:   rgba(233,196,106,.12);
+
+  --font:     'Segoe UI', system-ui, -apple-system, sans-serif;
+  --r:        10px;
+  --rs:       6px;
+  --shadow:   0 2px 12px rgba(0,0,0,.4);
+  --shadow-lg:0 8px 32px rgba(0,0,0,.55);
+  --sidebar-w:220px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 200;
+}
+.sidebar-brand {
+  padding: 20px 20px 16px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: .3px;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-brand span { color: var(--teal); }
+.sidebar-brand small {
+  display: block;
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--text3);
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+.sidebar-nav {
+  flex: 1;
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border: none;
+  border-radius: var(--rs);
+  background: none;
+  color: var(--text2);
+  font-family: var(--font);
+  font-size: 14px;
+  cursor: pointer;
+  transition: .15s;
+  text-align: left;
+}
+.nav-item:hover { background: var(--surface2); color: var(--text); }
+.nav-item.active { background: var(--lnavy); color: var(--navy2); font-weight: 600; }
+.nav-item.active .nav-icon { opacity: 1; }
+.nav-icon { font-size: 15px; flex-shrink: 0; opacity: .7; }
+.nav-sep {
+  height: 1px; background: var(--border);
+  margin: 8px 4px;
+}
+.sidebar-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text3);
+}
+.sidebar-footer strong { color: var(--amber); display: block; font-size: 10px; text-transform: uppercase; letter-spacing:.5px; margin-bottom:2px; }
+
+/* ── MAIN ── */
+.main-content {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  padding: clamp(16px, 2.5vw, 32px);
+  min-height: 100vh;
+}
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+/* ── PAGE HEADER ── */
+.page-hd {
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.page-title {
+  font-size: clamp(18px, 2.5vw, 22px);
+  font-weight: 700;
+  color: var(--text);
+}
+.page-subtitle {
+  font-size: 13px;
+  color: var(--text2);
+  margin-top: 2px;
+}
+
+/* ── KPI STRIP ── */
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 14px;
+  margin-bottom: 28px;
+}
+.kpi-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 18px 16px;
+  position: relative;
+  overflow: hidden;
+}
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--navy2);
+}
+.kpi-card.urgent::before { background: var(--coral); }
+.kpi-card.teal::before   { background: var(--teal); }
+.kpi-card.amber::before  { background: var(--amber); }
+.kpi-card.green::before  { background: var(--teal2); }
+.kpi-val {
+  font-size: clamp(26px, 3.5vw, 34px);
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+}
+.kpi-card.urgent .kpi-val { color: var(--coral2); }
+.kpi-card.teal   .kpi-val { color: var(--teal2); }
+.kpi-card.amber  .kpi-val { color: var(--amber2); }
+.kpi-card.green  .kpi-val { color: var(--teal2); }
+.kpi-label {
+  font-size: 10px;
+  color: var(--text3);
+  margin-top: 6px;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+}
+
+/* ── DASH GRID ── */
+.dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media(max-width:800px) { .dash-grid { grid-template-columns: 1fr; } }
+
+.dash-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+.dash-section-hd {
+  padding: 12px 16px;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: .3px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+.dash-section-hd.coral { color: var(--coral2); }
+.dash-section-hd.teal  { color: var(--teal2); }
+.dash-list { padding: 4px 0; }
+.dash-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13.5px;
+  transition: .12s;
+}
+.dash-item:last-child { border-bottom: none; }
+.dash-item:hover { background: var(--surface2); }
+.dash-item[style*="cursor"] { cursor: pointer; }
+.dash-item-proj { font-weight: 600; color: var(--navy2); min-width: 120px; font-size: 11px; flex-shrink: 0; }
+.dash-item-txt  { color: var(--text2); flex: 1; line-height: 1.4; }
+.dash-item-dead { font-size: 11px; font-weight: 600; white-space: nowrap; margin-left: auto; }
+.empty-msg { padding: 20px 16px; color: var(--text3); font-size: 13px; font-style: italic; }
+
+/* ── PROJECT LAYOUT ── */
+.proj-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 16px;
+  min-height: 600px;
+}
+@media(max-width:900px) { .proj-layout { grid-template-columns: 1fr; } }
+
+.proj-sidebar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  height: fit-content;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+}
+.sidebar-hd {
+  padding: 12px 14px;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  z-index: 1;
+}
+.btn-sm {
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  color: var(--teal2);
+  padding: 3px 10px;
+  border-radius: var(--rs);
+  font-size: 11px;
+  cursor: pointer;
+  font-family: var(--font);
+  font-weight: 600;
+  transition: .12s;
+}
+.btn-sm:hover { background: var(--lteal); border-color: var(--teal); }
+
+.cat-group {}
+.cat-label {
+  padding: 10px 14px 4px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  color: var(--text3);
+}
+.proj-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  cursor: pointer;
+  transition: .12s;
+  border-left: 3px solid transparent;
+  font-size: 13px;
+}
+.proj-item:hover { background: var(--surface2); }
+.proj-item.selected {
+  background: var(--lnavy);
+  border-left-color: var(--navy2);
+  font-weight: 600;
+  color: var(--text);
+}
+.status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── DETAIL PANEL ── */
+.proj-detail {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+.detail-hd {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+}
+.detail-title {
+  font-size: clamp(14px, 1.8vw, 17px);
+  font-weight: 700;
+  color: var(--text);
+  flex: 1;
+}
+.cat-badge {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  flex-shrink: 0;
+}
+.detail-meta {
+  padding: 12px 20px;
+  display: flex;
+  gap: 20px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  background: var(--surface);
+}
+.meta-item { font-size: 12px; color: var(--text2); }
+.meta-item strong { color: var(--text); }
+.detail-notes-wrap { padding: 10px 20px; border-bottom: 1px solid var(--border); }
+.detail-notes { font-size: 12px; color: var(--text3); font-style: italic; }
+
+/* ── ACTIONS ── */
+.actions-hd {
+  padding: 12px 20px;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+.btn-add {
+  background: var(--teal);
+  border: none;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: var(--rs);
+  font-size: 12px;
+  cursor: pointer;
+  font-family: var(--font);
+  font-weight: 600;
+  transition: .15s;
+}
+.btn-add:hover { background: #1E877A; }
+.actions-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.actions-table th {
+  text-align: left;
+  padding: 9px 12px;
+  background: var(--surface2);
+  color: var(--text3);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  border-bottom: 1px solid var(--border);
+}
+.actions-table td {
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+  color: var(--text2);
+}
+.actions-table tr:last-child td { border-bottom: none; }
+.actions-table tr.done td { opacity: .45; text-decoration: line-through; }
+.actions-table tr:hover td { background: var(--surface2); }
+
+.status-badge {
+  padding: 3px 9px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  white-space: nowrap;
+  letter-spacing: .3px;
+}
+.action-btns { display: flex; gap: 4px; }
+.action-btns button {
+  background: none;
+  border: 1px solid var(--border2);
+  padding: 3px 8px;
+  border-radius: var(--rs);
+  font-size: 11px;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: .12s;
+  color: var(--text2);
+}
+.action-btns button:hover { background: var(--surface3); }
+.action-btns button.btn-done  { border-color: var(--teal);  color: var(--teal2); }
+.action-btns button.btn-done:hover  { background: var(--lteal); }
+.action-btns button.btn-del   { border-color: var(--border2); color: var(--coral); }
+.action-btns button.btn-del:hover   { background: var(--lcoral); }
+
+.no-proj {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 320px;
+  color: var(--text3);
+  font-size: 14px;
+  flex-direction: column;
+  gap: 12px;
+}
+.no-proj-icon { font-size: 40px; opacity: .3; }
+
+/* ── BRIEFING ── */
+.briefing-wrap { max-width: 820px; }
+.briefing-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.briefing-hd {
+  padding: 14px 20px;
+  background: linear-gradient(135deg, var(--navy), #0D2340);
+  color: var(--text);
+  font-weight: 700;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.briefing-hd small { font-weight: 400; opacity: .6; font-size: 12px; margin-left: auto; }
+.briefing-body { padding: 16px 20px; }
+.briefing-section { margin-bottom: 18px; }
+.briefing-section-title {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  font-weight: 700;
+  color: var(--text3);
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+.briefing-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13.5px;
+}
+.briefing-row:last-child { border-bottom: none; }
+.br-proj   { font-weight: 700; color: var(--navy2); min-width: 150px; font-size: 11px; flex-shrink: 0; }
+.br-action { flex: 1; color: var(--text2); }
+.br-dead   { font-size: 11px; font-weight: 600; white-space: nowrap; }
+.br-resp   { font-size: 10px; color: var(--text3); background: var(--surface2); padding: 2px 7px; border-radius: 10px; white-space: nowrap; }
+
+.refresh-btn {
+  background: var(--teal);
+  border: none;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: var(--rs);
+  font-size: 13px;
+  cursor: pointer;
+  font-family: var(--font);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  transition: .15s;
+}
+.refresh-btn:hover { background: #1E877A; }
+
+/* ── REUNIÃO ── */
+.meeting-wrap { max-width: 960px; }
+.meeting-controls {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 16px 20px;
+}
+.meeting-controls input[type=date],
+.meeting-controls input[type=text] {
+  border: 1px solid var(--border2);
+  border-radius: var(--rs);
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: var(--font);
+  color: var(--text);
+  background: var(--surface2);
+}
+.meeting-controls input:focus { outline: none; border-color: var(--teal); }
+
+.btn-print {
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  padding: 9px 18px;
+  border-radius: var(--rs);
+  font-size: 13px;
+  cursor: pointer;
+  font-family: var(--font);
+  font-weight: 600;
+  margin-left: auto;
+  transition: .15s;
+}
+.btn-print:hover { background: var(--surface2); color: var(--text); }
+
+.meeting-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.meeting-proj-hd {
+  padding: 10px 16px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.meeting-proj-hd .cat-tag { font-weight: 400; font-size: 11px; opacity: .75; }
+.meeting-actions-tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.meeting-actions-tbl th {
+  background: var(--surface2);
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  color: var(--text3);
+  border-bottom: 1px solid var(--border);
+}
+.meeting-actions-tbl td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text2);
+}
+.meeting-actions-tbl tr:last-child td { border-bottom: none; }
+.meeting-actions-tbl tr.done-row td { opacity: .4; }
+.meeting-log {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.meeting-log-hd {
+  padding: 12px 16px;
+  background: var(--surface2);
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--text2);
+  border-bottom: 1px solid var(--border);
+  text-transform: uppercase;
+  letter-spacing: .4px;
+}
+.meeting-log-body { padding: 16px; display: grid; gap: 12px; }
+.log-field label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  display: block;
+  margin-bottom: 5px;
+}
+.log-field textarea {
+  width: 100%;
+  border: 1px solid var(--border2);
+  border-radius: var(--rs);
+  padding: 9px 12px;
+  font-size: 14px;
+  font-family: var(--font);
+  color: var(--text);
+  background: var(--surface2);
+  resize: vertical;
+  outline: none;
+  min-height: 70px;
+}
+.log-field textarea:focus { border-color: var(--teal); }
+.btn-save-log {
+  background: var(--navy2);
+  border: none;
+  color: #fff;
+  padding: 9px 20px;
+  border-radius: var(--rs);
+  font-size: 13px;
+  cursor: pointer;
+  font-family: var(--font);
+  font-weight: 600;
+  transition: .15s;
+  align-self: start;
+}
+.btn-save-log:hover { background: var(--teal); }
+
+/* ── MODAL ── */
+.modal-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.65);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-backdrop.open { display: flex; }
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 14px;
+  width: 100%;
+  max-width: 560px;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+.modal-hd {
+  padding: 16px 20px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  font-weight: 700;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text3);
+  font-size: 20px;
+  cursor: pointer;
+  transition: .12s;
+  line-height: 1;
+}
+.modal-close:hover { color: var(--text); }
+.modal-body { padding: 20px; display: grid; gap: 14px; }
+.field label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--text3);
+  display: block;
+  margin-bottom: 5px;
+}
+.field input, .field select, .field textarea {
+  width: 100%;
+  border: 1px solid var(--border2);
+  border-radius: var(--rs);
+  padding: 9px 12px;
+  font-size: 14px;
+  font-family: var(--font);
+  color: var(--text);
+  background: var(--surface2);
+  outline: none;
+  transition: .15s;
+}
+.field select option { background: var(--surface2); }
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--teal); background: var(--surface3); }
+.field textarea { min-height: 64px; resize: vertical; }
+.fields-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.modal-footer {
+  padding: 14px 20px;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  border-top: 1px solid var(--border);
+  background: var(--surface2);
+}
+.btn-cancel {
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  padding: 9px 18px;
+  border-radius: var(--rs);
+  font-size: 13px;
+  cursor: pointer;
+  font-family: var(--font);
+  color: var(--text2);
+  transition: .15s;
+}
+.btn-cancel:hover { background: var(--surface2); color: var(--text); }
+.btn-confirm {
+  background: var(--teal);
+  border: none;
+  color: #fff;
+  padding: 9px 18px;
+  border-radius: var(--rs);
+  font-size: 13px;
+  cursor: pointer;
+  font-family: var(--font);
+  font-weight: 600;
+  transition: .15s;
+}
+.btn-confirm:hover { background: #1E877A; }
+.btn-danger {
+  background: var(--lcoral);
+  border: 1px solid rgba(232,96,76,.4);
+  color: var(--coral2);
+  padding: 9px 18px;
+  border-radius: var(--rs);
+  font-size: 13px;
+  cursor: pointer;
+  font-family: var(--font);
+  font-weight: 600;
+  transition: .15s;
+  margin-right: auto;
+}
+.btn-danger:hover { background: var(--coral); color: #fff; }
+
+/* ── STATUS COLORS ── */
+.s-urgente    { background:rgba(232,96,76,.2);  color:#FF8B75; }
+.s-andamento  { background:rgba(42,157,143,.2); color:#4ECDC4; }
+.s-afazer     { background:rgba(139,148,158,.15);color:#8B949E; }
+.s-concluido  { background:rgba(42,200,185,.12); color:#3BC9C0; }
+.s-bloqueado  { background:rgba(255,143,0,.18); color:#FFA040; }
+.d-urgente    { color: var(--coral2); }
+.d-soon       { color: var(--amber2); }
+.d-ok         { color: var(--teal2); }
+
+/* ── CAT BADGE COLORS ── */
+.cat-Contrato   { background:#1B3A5C; color:#8BB8E8; }
+.cat-Produto    { background:rgba(42,157,143,.25); color:#4ECDC4; }
+.cat-Marketing  { background:rgba(123,63,160,.25); color:#C77DFF; }
+.cat-Estratégico{ background:rgba(232,96,76,.2);  color:#FF8B75; }
+.cat-Serviço    { background:rgba(46,125,50,.25); color:#69F0AE; }
+
+/* ── DOT COLORS ── */
+.dot-urgente   { background: var(--coral); }
+.dot-andamento { background: var(--teal); }
+.dot-afazer    { background: var(--border2); }
+.dot-concluido { background: #445; }
+.dot-bloqueado { background: #E65100; }
+
+/* ── PROJ STATUS ── */
+.proj-status-urgente   { color: var(--coral2); font-weight: 700; }
+.proj-status-andamento { color: var(--teal2); }
+.proj-status-afazer    { color: var(--text3); }
+.proj-status-concluido { color: var(--border2); }
+
+/* ── VIEW TOGGLE ── */
+.view-toggle { display: flex; gap: 4px; }
+.view-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text3);
+  padding: 5px 12px;
+  border-radius: var(--rs);
+  font-size: 11px;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: .12s;
+  font-weight: 500;
+}
+.view-btn:hover { background: var(--surface3); color: var(--text2); }
+.view-btn.active { background: var(--navy2); color: #fff; border-color: var(--navy2); }
+
+/* ── KANBAN ── */
+.kanban-board {
+  display: flex;
+  gap: 12px;
+  padding: 16px 20px;
+  overflow-x: auto;
+  min-height: 320px;
+  align-items: flex-start;
+}
+.kanban-col { min-width: 185px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.kanban-col-hd {
+  padding: 8px 10px;
+  border-radius: var(--rs);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  display: flex;
+  justify-content: space-between;
+}
+.kanban-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--rs);
+  padding: 11px 13px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: .15s;
+  box-shadow: 0 1px 4px rgba(0,0,0,.2);
+}
+.kanban-card:hover { border-color: var(--teal); box-shadow: 0 2px 12px rgba(42,157,143,.2); transform: translateY(-1px); }
+.kanban-card-title { color: var(--text); font-weight: 600; margin-bottom: 6px; line-height: 1.35; }
+.kanban-card-meta  { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
+.kanban-card-resp  { font-size: 10px; background: var(--surface3); padding: 1px 6px; border-radius: 10px; color: var(--text2); }
+.kanban-card-dead  { font-size: 10px; font-weight: 600; }
+.kanban-card-notes { font-size: 10px; color: var(--text3); font-style: italic; margin-top: 4px; }
+.kanban-empty { color: var(--text3); font-size: 11px; font-style: italic; text-align: center; padding: 14px 6px; }
+.kanban-move-btn {
+  margin-top: 6px;
+  background: none;
+  border: none;
+  font-size: 10px;
+  color: var(--text3);
+  cursor: pointer;
+  font-family: var(--font);
+  padding: 0;
+  display: flex;
+  gap: 6px;
+}
+.kanban-move-btn span:hover { color: var(--teal2); text-decoration: underline; }
+
+/* ── TIMELINE ── */
+.timeline-wrap { padding: 16px 20px; }
+.timeline-header {
+  display: grid;
+  grid-template-columns: 1fr 90px 80px 100px;
+  gap: 8px;
+  padding: 7px 12px;
+  background: var(--surface2);
+  border-radius: var(--rs);
+  margin-bottom: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--text3);
+}
+.timeline-row {
+  display: grid;
+  grid-template-columns: 1fr 90px 80px 100px;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--rs);
+  align-items: center;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: .12s;
+  font-size: 13px;
+}
+.timeline-row:hover { border-color: var(--teal); background: var(--surface3); }
+.timeline-row.done-tl { opacity: .4; }
+.timeline-task { color: var(--text); font-weight: 500; line-height: 1.35; }
+.timeline-bar-outer { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin-top: 5px; }
+.timeline-bar-inner { height: 100%; border-radius: 3px; transition: width .3s; }
+.tl-group-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  padding: 14px 0 6px;
+  border-top: 1px solid var(--border);
+  margin-top: 6px;
+}
+.tl-group-label:first-child { border-top: none; margin-top: 0; padding-top: 0; }
+
+/* ── CLAUDE SYNC ── */
+.btn-claude {
+  background: linear-gradient(135deg, var(--teal), #1A4D8C);
+  border: none;
+  color: #fff;
+  padding: 9px 16px;
+  border-radius: var(--rs);
+  font-size: 12px;
+  cursor: pointer;
+  font-family: var(--font);
+  font-weight: 600;
+  transition: .15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-claude:hover { opacity: .88; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(42,157,143,.3); }
+.toast {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 9999;
+  background: var(--surface2);
+  color: var(--text);
+  padding: 14px 20px;
+  border-radius: var(--r);
+  font-size: 13px;
+  box-shadow: var(--shadow-lg);
+  transform: translateY(80px);
+  opacity: 0;
+  transition: .3s ease;
+  max-width: 380px;
+  line-height: 1.5;
+  border-left: 4px solid var(--teal);
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast strong { color: var(--teal2); }
+
+/* ── GUIDE ── */
+.guide-wrap { max-width: 900px; }
+.guide-intro {
+  background: linear-gradient(135deg, #0F2A45, #0D1A2E);
+  border: 1px solid rgba(59,110,168,.3);
+  border-radius: var(--r);
+  padding: 28px 32px;
+  margin-bottom: 28px;
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+.guide-intro-icon { font-size: 40px; flex-shrink: 0; }
+.guide-intro-text h2 { font-size: 20px; color: var(--text); margin-bottom: 8px; }
+.guide-intro-text p  { font-size: 14px; color: var(--text2); line-height: 1.6; }
+.guide-intro-badges { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid;
+}
+.badge-teal   { background: var(--lteal);  color: var(--teal2);  border-color: rgba(42,157,143,.3); }
+.badge-coral  { background: var(--lcoral); color: var(--coral2); border-color: rgba(232,96,76,.3); }
+.badge-amber  { background: var(--lamber); color: var(--amber2); border-color: rgba(233,196,106,.3); }
+
+.guide-section { margin-bottom: 24px; }
+.guide-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  color: var(--text3);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.guide-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+.guide-card-hd {
+  padding: 14px 18px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.guide-card-body { padding: 18px; }
+
+.steps { display: flex; flex-direction: column; gap: 12px; }
+.step {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.step-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--lnavy);
+  border: 1px solid var(--navy2);
+  color: var(--navy2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.step-content { flex: 1; padding-top: 4px; }
+.step-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+.step-desc  { font-size: 13px; color: var(--text2); line-height: 1.5; }
+.step-desc code {
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 11px;
+  color: var(--amber2);
+  font-family: 'Consolas', monospace;
+}
+
+.status-guide {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+.status-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--rs);
+}
+.status-badge-lg {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.status-item-desc { font-size: 13px; color: var(--text2); line-height: 1.4; }
+
+.tips-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 10px;
+}
+.tip-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 13px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--rs);
+  font-size: 13.5px;
+  color: var(--text2);
+  line-height: 1.4;
+}
+.tip-icon { font-size: 16px; flex-shrink: 0; }
+
+.tab-guide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+}
+.tab-guide-card {
+  padding: 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--rs);
+  text-align: center;
+}
+.tab-guide-icon { font-size: 24px; margin-bottom: 8px; }
+.tab-guide-name { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.tab-guide-desc { font-size: 12px; color: var(--text2); line-height: 1.4; }
+
+/* ── PRINT ── */
+@media print {
+  .sidebar, .meeting-controls, .btn-print, .action-btns { display: none !important; }
+  body { background: white; color: #333; }
+  .main-content { margin-left: 0; }
+  .tab-pane { display: none !important; }
+  #tab-reuniao { display: block !important; }
+  .surface, .surface2, .surface3 { background: white !important; }
+}
+
+/* ── RESPONSIVE ── */
+@media(max-width:720px) {
+  :root { --sidebar-w: 200px; }
+  .main-content { padding: 16px; }
+  .kpi-strip { grid-template-columns: repeat(2, 1fr); }
+}
+@media(max-width:580px) {
+  .sidebar { width: 60px; }
+  .nav-label { display: none; }
+  .sidebar-brand span, .sidebar-brand small { display: none; }
+  .sidebar-brand { padding: 16px 10px; font-size: 20px; }
+  .sidebar-footer { display: none; }
+  .main-content { margin-left: 60px; }
+}
+
+
+/* ── BADGES DE NOTIFICAÇÃO ── */
+.nav-badge {
+  margin-left: auto;
+  background: var(--coral);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+  display: none;
+}
+.nav-badge.visible { display: inline-block; }
+
+/* ── FEED DE ATUALIZAÇÕES ── */
+.activity-feed { padding: 0 20px 20px; }
+.activity-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.activity-item:last-child { border-bottom: none; }
+.activity-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  background: var(--surface2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.activity-body { flex: 1; min-width: 0; }
+.activity-who  { font-size: 11px; font-weight: 600; color: var(--teal2); }
+.activity-what { color: var(--text); margin: 2px 0; }
+.activity-proj { font-size: 11px; color: var(--text3); }
+.activity-time { font-size: 10px; color: var(--text3); white-space: nowrap; margin-top: 3px; }
+
+/* ── NOTIFICAÇÕES ── */
+.notif-item {
+  display: flex;
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background .15s;
+}
+.notif-item:hover { background: var(--surface2); }
+.notif-item.unread { border-left: 3px solid var(--teal2); }
+.notif-item.read   { opacity: .6; }
+.notif-body  { flex: 1; }
+.notif-from  { font-size: 11px; font-weight: 600; color: var(--teal2); margin-bottom: 4px; }
+.notif-msg   { font-size: 13px; color: var(--text); margin-bottom: 3px; }
+.notif-proj  { font-size: 11px; color: var(--text3); }
+.notif-time  { font-size: 10px; color: var(--text3); margin-top: 4px; }
+.notif-empty { padding: 40px 20px; text-align: center; color: var(--text3); font-size: 13px; }
+
+/* ── LOGIN ── */
+#login-screen {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+}
+.login-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 40px 44px;
+  width: 360px;
+  box-shadow: var(--shadow-lg);
+}
+.login-logo {
+  font-size: 22px; font-weight: 700; color: var(--text);
+  margin-bottom: 4px;
+}
+.login-logo span { color: var(--teal2); }
+.login-sub {
+  font-size: 12px; color: var(--text3);
+  margin-bottom: 28px;
+}
+.login-field {
+  display: flex; flex-direction: column; gap: 6px;
+  margin-bottom: 16px;
+}
+.login-field label { font-size: 12px; color: var(--text2); }
+.login-field input {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--rs);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  padding: 9px 12px;
+  outline: none;
+  transition: border-color .15s;
+}
+.login-field input:focus { border-color: var(--teal); }
+.login-btn {
+  width: 100%; padding: 10px;
+  background: var(--teal); color: #fff;
+  border: none; border-radius: var(--rs);
+  font-family: var(--font); font-size: 14px; font-weight: 600;
+  cursor: pointer; margin-top: 8px;
+  transition: background .15s;
+}
+.login-btn:hover { background: var(--teal2); }
+.login-err {
+  font-size: 12px; color: var(--coral2);
+  margin-top: 10px; min-height: 18px;
+  text-align: center;
+}
+/* Sincronização */
+#sync-indicator {
+  position: fixed; bottom: 14px; right: 16px; z-index: 500;
+  font-size: 11px; color: var(--text3);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 12px;
+  display: none;
+}
+</style>
+</head>
+<body>
+
+<!-- TELA DE LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">GP <span>Girus</span></div>
+    <div class="login-sub">Gestão de Projetos — acesso restrito</div>
+    <div class="login-field">
+      <label>E-mail</label>
+      <input type="email" id="login-email" placeholder="seu@email.com" autocomplete="email">
+    </div>
+    <div class="login-field">
+      <label>Senha</label>
+      <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Entrar</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- INDICADOR DE SYNC -->
+<div id="sync-indicator">⟳ Sincronizando…</div>
+
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    G<span>P</span>
+    <small>Girus Projetos</small>
+  </div>
+  <nav class="sidebar-nav">
+    <button class="nav-item active" onclick="showTab('dashboard')">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label">Dashboard</span>
+    </button>
+    <button class="nav-item" onclick="showTab('projetos')">
+      <span class="nav-icon">📂</span>
+      <span class="nav-label">Projetos</span>
+    </button>
+    <button class="nav-item" onclick="showTab('briefing')">
+      <span class="nav-icon">⚡</span>
+      <span class="nav-label">Briefing do Dia</span>
+    </button>
+    <button class="nav-item" onclick="showTab('reuniao')">
+      <span class="nav-icon">📅</span>
+      <span class="nav-label">Reunião Semanal</span>
+    </button>
+    <button class="nav-item" onclick="showTab('atividade')">
+      <span class="nav-icon">📋</span>
+      <span class="nav-label">Atualizações</span>
+      <span class="nav-badge" id="badge-atividade">0</span>
+    </button>
+    <button class="nav-item" onclick="showTab('notificacoes')">
+      <span class="nav-icon">🔔</span>
+      <span class="nav-label">Notificações</span>
+      <span class="nav-badge" id="badge-notif">0</span>
+    </button>
+    <div class="nav-sep"></div>
+    <button class="nav-item" onclick="showTab('guia')">
+      <span class="nav-icon">📖</span>
+      <span class="nav-label">Guia de Uso</span>
+    </button>
+    <button class="nav-item" onclick="exportarParaClaude()" title="Gera projetos-status.md para a skill girus-social" style="border-top:1px solid rgba(255,255,255,0.15);margin-top:8px;padding-top:12px;">
+      <span class="nav-icon">🤖</span>
+      <span class="nav-label">Exportar p/ Claude</span>
+    </button>
+  </nav>
+  <div class="sidebar-footer">
+    <strong>Atualizado</strong>
+    <span id="hdate"></span>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <div id="sidebar-user" style="font-size:10px;color:var(--text3);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+      <button onclick="doLogout()" style="width:100%;padding:5px 8px;background:none;border:1px solid var(--border2);border-radius:var(--rs);color:var(--text3);font-size:11px;cursor:pointer;font-family:var(--font);text-align:left" onmouseover="this.style.color='var(--coral2)'" onmouseout="this.style.color='var(--text3)'">⎋ Sair</button>
+    </div>
+  </div>
+</aside>
+
+<div class="main-content">
+
+  <!-- ══ DASHBOARD ══ -->
+  <div class="tab-pane active" id="tab-dashboard">
+    <div class="page-hd">
+      <div>
+        <div class="page-title">Dashboard</div>
+        <div class="page-subtitle">Visão geral de todos os projetos</div>
+      </div>
+    </div>
+    <div class="kpi-strip" id="kpi-strip"></div>
+    <div class="dash-grid">
+      <div class="dash-section">
+        <div class="dash-section-hd coral">🔥 Urgente / Esta Semana</div>
+        <div class="dash-list" id="dash-urgent"></div>
+      </div>
+      <div class="dash-section">
+        <div class="dash-section-hd teal">🔄 Em Andamento</div>
+        <div class="dash-list" id="dash-wip"></div>
+      </div>
+      <div class="dash-section">
+        <div class="dash-section-hd">📁 Status dos Projetos</div>
+        <div class="dash-list" id="dash-projects"></div>
+      </div>
+      <div class="dash-section">
+        <div class="dash-section-hd">✅ Concluídas Recentemente</div>
+        <div class="dash-list" id="dash-done"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PROJETOS ══ -->
+  <div class="tab-pane" id="tab-projetos">
+    <div class="page-hd">
+      <div>
+        <div class="page-title">Projetos</div>
+        <div class="page-subtitle">Gerencie ações e entregas por projeto</div>
+      </div>
+    </div>
+    <div class="proj-layout">
+      <aside class="proj-sidebar">
+        <div class="sidebar-hd">
+          Projetos
+          <button class="btn-sm" onclick="openProjModal()">+ Novo</button>
+        </div>
+        <div id="proj-list"></div>
+      </aside>
+      <section class="proj-detail" id="proj-detail">
+        <div class="no-proj">
+          <div class="no-proj-icon">📂</div>
+          Selecione um projeto à esquerda
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ══ BRIEFING ══ -->
+  <div class="tab-pane" id="tab-briefing">
+    <div class="page-hd">
+      <div>
+        <div class="page-title">Briefing do Dia</div>
+        <div class="page-subtitle">Prioridades e ações para hoje</div>
+      </div>
+    </div>
+    <div class="briefing-wrap">
+      <button class="refresh-btn" onclick="renderBriefing()">↻ Atualizar Briefing</button>
+      <div id="briefing-content"></div>
+    </div>
+  </div>
+
+  <!-- ══ REUNIÃO SEMANAL ══ -->
+  <div class="tab-pane" id="tab-reuniao">
+    <div class="page-hd">
+      <div>
+        <div class="page-title">Reunião Semanal</div>
+        <div class="page-subtitle">Revisão de projetos e registro de decisões</div>
+      </div>
+    </div>
+    <div class="meeting-wrap">
+      <div class="meeting-controls">
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Data da Reunião</label>
+          <input type="date" id="meet-date">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Próxima Reunião</label>
+          <input type="date" id="meet-next">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Sprint nº</label>
+          <input type="text" id="meet-sprint" placeholder="—" style="width:80px">
+        </div>
+        <button class="btn-print" onclick="window.print()">🖨 Imprimir</button>
+      </div>
+
+      <div class="meeting-log">
+        <div class="meeting-log-hd">📝 Registro da Reunião</div>
+        <div class="meeting-log-body">
+          <div class="log-field">
+            <label>Decisões tomadas</label>
+            <textarea id="log-decisoes" placeholder="Decisões tomadas nesta reunião..."></textarea>
+          </div>
+          <div class="log-field">
+            <label>Pontos de atenção</label>
+            <textarea id="log-atencao" placeholder="Pontos que precisam de atenção..."></textarea>
+          </div>
+          <div class="log-field">
+            <label>Observações gerais</label>
+            <textarea id="log-obs" placeholder="Outras observações..."></textarea>
+          </div>
+          <button class="btn-save-log" onclick="saveLog()">Salvar Registro</button>
+        </div>
+      </div>
+
+      <div id="meeting-projects"></div>
+      <div id="meeting-history"></div>
+    </div>
+  </div>
+
+  <!-- ══ GUIA DE USO ══ -->
+  <div class="tab-pane" id="tab-atividade">
+    <div class="page-hd">
+      <div>
+        <div class="page-title">Atualizações</div>
+        <div class="page-subtitle">Histórico de mudanças em tempo real</div>
+      </div>
+      <button class="btn-add" onclick="loadActivity(true)" style="margin-left:auto">↻ Atualizar</button>
+    </div>
+    <div id="activity-feed" class="activity-feed"></div>
+  </div>
+
+  <div class="tab-pane" id="tab-notificacoes">
+    <div class="page-hd">
+      <div>
+        <div class="page-title">Notificações</div>
+        <div class="page-subtitle">@menções recebidas</div>
+      </div>
+      <button class="btn-add" onclick="markAllRead()" style="margin-left:auto">✓ Marcar todas lidas</button>
+    </div>
+    <div id="notif-list"></div>
+  </div>
+
+  <div class="tab-pane" id="tab-guia">
+    <div class="page-hd">
+      <div>
+        <div class="page-title">Guia de Uso</div>
+        <div class="page-subtitle">Como usar a ferramenta Girus Projetos</div>
+      </div>
+    </div>
+    <div class="guide-wrap" id="guide-content"></div>
+  </div>
+
+</div><!-- /main-content -->
+
+<div class="toast" id="toast-msg"></div>
+
+<!-- ══ MODAL PROJETO ══ -->
+<div class="modal-backdrop" id="modal-proj">
+  <div class="modal">
+    <div class="modal-hd">
+      <span id="mpj-title">Novo Projeto</span>
+      <button class="modal-close" onclick="closeModal('modal-proj')">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="mpj-id">
+      <div class="field">
+        <label>Nome do Projeto</label>
+        <input type="text" id="mpj-name" placeholder="ex: Cliente_Garopaba">
+      </div>
+      <div class="fields-row">
+        <div class="field">
+          <label>Categoria</label>
+          <select id="mpj-cat">
+            <option>Contrato</option>
+            <option>Produto</option>
+            <option>Marketing</option>
+            <option>Estratégico</option>
+            <option>Serviço</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Status Geral</label>
+          <select id="mpj-status">
+            <option value="andamento">Em Andamento</option>
+            <option value="urgente">Urgente</option>
+            <option value="afazer">A Fazer</option>
+            <option value="concluido">Concluído</option>
+          </select>
+        </div>
+      </div>
+      <div class="fields-row">
+        <div class="field">
+          <label>Responsável</label>
+          <input type="text" id="mpj-resp" placeholder="Cappelini / Helo">
+        </div>
+        <div class="field">
+          <label>Fase / Etapa Atual</label>
+          <input type="text" id="mpj-phase" placeholder="ex: Fase 3">
+        </div>
+      </div>
+      <div class="field">
+        <label>Notas / Contexto</label>
+        <textarea id="mpj-notes" placeholder="Contexto relevante sobre o projeto..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-danger" id="mpj-del-btn" onclick="deleteProject()" style="display:none">Excluir Projeto</button>
+      <button class="btn-cancel" onclick="closeModal('modal-proj')">Cancelar</button>
+      <button class="btn-confirm" onclick="saveProject()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL AÇÃO ══ -->
+<div class="modal-backdrop" id="modal-action">
+  <div class="modal">
+    <div class="modal-hd">
+      <span id="mac-title">Nova Ação</span>
+      <button class="modal-close" onclick="closeModal('modal-action')">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="mac-proj-id">
+      <input type="hidden" id="mac-action-id">
+      <div class="field">
+        <label>Ação / Entrega</label>
+        <input type="text" id="mac-text" placeholder="Descreva a ação...">
+      </div>
+      <div class="field">
+        <label>Tema / Macro-ação</label>
+        <input type="text" id="mac-tema" placeholder="ex: Cicloturismo, Comtur, Agências" list="mac-tema-list" autocomplete="off">
+        <datalist id="mac-tema-list"></datalist>
+      </div>
+      <div class="fields-row">
+        <div class="field">
+          <label>Status</label>
+          <select id="mac-status">
+            <option value="afazer">A Fazer</option>
+            <option value="andamento">Em Andamento</option>
+            <option value="urgente">Urgente</option>
+            <option value="concluido">Concluído</option>
+            <option value="bloqueado">Bloqueado</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Responsável</label>
+          <select id="mac-resp">
+            <option>Cappelini</option>
+            <option>Helo</option>
+            <option>Capp/Helo</option>
+          </select>
+        </div>
+      </div>
+      <div class="fields-row">
+        <div class="field">
+          <label>Prazo</label>
+          <input type="date" id="mac-deadline">
+        </div>
+      </div>
+      <div class="field">
+        <label style="display:flex;align-items:center;gap:7px">
+          📝 Observação
+          <span style="font-size:10px;font-weight:400;color:var(--teal2);background:var(--lteal);padding:2px 8px;border-radius:10px;letter-spacing:.3px">
+            incluída na mensagem ao Claude
+          </span>
+        </label>
+        <textarea id="mac-notes" rows="3"
+          placeholder="O que foi definido ou decidido? Ex: Aprovado valor de R$399/mês com acesso de até 10 usuários."
+          style="min-height:72px"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-danger" id="mac-del-btn" onclick="deleteAction()" style="display:none">Excluir</button>
+      <button class="btn-claude" id="mac-claude-btn" onclick="saveAndSendToClaude()" title="Salva e copia mensagem para o Claude">🤖 Salvar + Claude</button>
+      <button class="btn-cancel" onclick="closeModal('modal-action')">Cancelar</button>
+      <button class="btn-confirm" onclick="saveAction()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+
+// ══════════════════════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════════════════════
+// SUPABASE
+// ══════════════════════════════════════════════════════════════
+const SUPA_URL  = 'https://wmwsmmdlplqtvilvcdgh.supabase.co';
+const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indtd3NtbWRscGxxdHZpbHZjZGdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzODY0MDQsImV4cCI6MjA5Njk2MjQwNH0.O711tOncFfYSpJ1Il08naUzCAhokiaA3oMMvdngNzNM';
+const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-pass').value;
+  const btn   = document.getElementById('login-btn');
+  const err   = document.getElementById('login-err');
+  err.textContent = '';
+  btn.textContent = 'Entrando…';
+  btn.disabled = true;
+  const { error } = await supa.auth.signInWithPassword({ email, password: pass });
+  if (error) {
+    err.textContent = 'E-mail ou senha incorretos.';
+    btn.textContent = 'Entrar';
+    btn.disabled = false;
+  }
+}
+document.getElementById('login-pass').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+
+async function doLogout() {
+  await supa.auth.signOut();
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('sidebar-user').textContent = '';
+}
+
+async function loadState() {
+  const { data } = await supa
+    .from('girus_state')
+    .select('data')
+    .eq('id','singleton')
+    .single();
+  if (data?.data) {
+    const s = data.data;
+    // Migração: garante projetos novos do INITIAL_DATA
+    const ids = new Set(s.projects.map(p => p.id));
+    const toAdd = INITIAL_DATA.projects.filter(p => !ids.has(p.id));
+    if (toAdd.length) { s.projects.push(...toAdd); }
+    return s;
+  }
+  return JSON.parse(JSON.stringify(INITIAL_DATA));
+}
+
+let _saveTimer = null;
+function saveState() {
+  // Debounce: agrupa saves rápidos em um único write (500ms)
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(async () => {
+    _saveTimer = null;
+    const ind = document.getElementById('sync-indicator');
+    ind.style.display = 'block';
+    const user = (await supa.auth.getUser()).data.user;
+    const { error } = await supa.from('girus_state').upsert({
+      id: 'singleton',
+      data: state,
+      updated_at: new Date().toISOString(),
+      updated_by: user?.email || '?'
+    });
+    if (error) {
+      ind.textContent = '❌ Erro ao salvar';
+      ind.style.color = '#f87171';
+      setTimeout(() => { ind.style.display = 'none'; ind.textContent = '🔄 Sincronizando...'; ind.style.color = ''; }, 3000);
+    } else {
+      setTimeout(() => ind.style.display = 'none', 800);
+    }
+  }, 500);
+}
+
+// Realtime: quando a outra usuária salva, atualiza a tela
+function setupRealtime() {
+  // Sincroniza estado compartilhado
+  supa.channel('girus_state_changes')
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'girus_state' },
+      payload => {
+        // Ignora se estou salvando (indicator visível) OU se há um save pendente (timer ativo)
+        if (_saveTimer !== null) return;
+        if (document.getElementById('sync-indicator').style.display === 'block') return;
+        state = payload.new.data;
+        refreshCurrentView();
+      }
+    ).subscribe();
+
+  // Novas atividades → atualiza badge e feed se visível
+  supa.channel('girus_activity_changes')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'girus_activity' },
+      payload => {
+        // Só atualiza badge se não fui eu quem gerou
+        const row = payload.new;
+        if (row.user_email !== _currentUserEmail) {
+          const badge = document.getElementById('badge-atividade');
+          if (badge) {
+            const cur = parseInt(badge.textContent) || 0;
+            badge.textContent = cur + 1;
+            badge.style.display = 'inline-block';
+          }
+        }
+        // Se a aba está aberta, recarrega o feed
+        const pane = document.getElementById('tab-atividade');
+        if (pane && pane.style.display !== 'none') loadActivity(false);
+      }
+    ).subscribe();
+
+  // Novas notificações para este usuário → atualiza badge
+  supa.channel('girus_notif_changes')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'girus_notifications' },
+      payload => {
+        const row = payload.new;
+        if (row.to_user === currentUserName()) {
+          const badge = document.getElementById('badge-notif');
+          if (badge) {
+            const cur = parseInt(badge.textContent) || 0;
+            badge.textContent = cur + 1;
+            badge.style.display = 'inline-block';
+          }
+          // Se aba aberta, recarrega
+          const pane = document.getElementById('tab-notificacoes');
+          if (pane && pane.style.display !== 'none') loadNotifications();
+        }
+      }
+    ).subscribe();
+}
+
+// ══════════════════════════════════════════════════════════════
+// ATUALIZAÇÕES — ACTIVITY LOG
+// ══════════════════════════════════════════════════════════════
+let _currentUserEmail = '';
+let _lastActivitySeen = localStorage.getItem('girus_last_activity') || '';
+
+async function logActivity(projId, projName, actionText, changeType, changeDetail) {
+  try {
+    await supa.from('girus_activity').insert({
+      project_id: projId,
+      project_name: projName,
+      action_text: actionText,
+      change_type: changeType,
+      change_detail: changeDetail,
+      done_by: _currentUserEmail
+    });
+  } catch(e) { console.warn('logActivity erro:', e); }
+}
+
+const ACTIVITY_ICON = {
+  nova_acao: '➕', status: '🔄', concluido: '✅',
+  reaberto: '↩', excluido: '🗑', notas: '💬', prazo: '📅'
+};
+const ACTIVITY_LABEL = {
+  nova_acao: 'criou nova ação', status: 'alterou status',
+  concluido: 'concluiu ação', reaberto: 'reabriu ação',
+  excluido: 'excluiu ação', notas: 'atualizou observação', prazo: 'alterou prazo'
+};
+
+function timeAgo(ts) {
+  const diff = Math.floor((Date.now() - new Date(ts)) / 1000);
+  if (diff < 60)  return 'agora';
+  if (diff < 3600) return Math.floor(diff/60) + 'min atrás';
+  if (diff < 86400) return Math.floor(diff/3600) + 'h atrás';
+  return Math.floor(diff/86400) + 'd atrás';
+}
+
+async function loadActivity(fromBtn) {
+  const { data } = await supa
+    .from('girus_activity')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  const el = document.getElementById('activity-feed');
+  if (!data || !data.length) {
+    el.innerHTML = '<div style="padding:40px 0;text-align:center;color:var(--text3);font-size:13px">Nenhuma atualização ainda.</div>';
+    return;
+  }
+
+  // Atualiza badge com itens desde última visita
+  if (fromBtn) {
+    _lastActivitySeen = data[0]?.created_at || '';
+    localStorage.setItem('girus_last_activity', _lastActivitySeen);
+    document.getElementById('badge-atividade').classList.remove('visible');
+  }
+
+  el.innerHTML = data.map(item => `
+    <div class="activity-item">
+      <div class="activity-icon">${ACTIVITY_ICON[item.change_type] || '📌'}</div>
+      <div class="activity-body">
+        <div class="activity-who">${item.done_by || 'Sistema'}</div>
+        <div class="activity-what">
+          <strong>${ACTIVITY_LABEL[item.change_type] || item.change_type}</strong>:
+          ${item.action_text || ''}
+          ${item.change_detail ? `<span style="color:var(--text3)"> — ${item.change_detail}</span>` : ''}
+        </div>
+        <div class="activity-proj">📂 ${item.project_name || ''}</div>
+        <div class="activity-time">${timeAgo(item.created_at)}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+// NOTIFICAÇÕES — @MENÇÕES
+// ══════════════════════════════════════════════════════════════
+// Mapa: nome exibido → quem recebe
+const MENTION_MAP = {
+  '@cappelini': 'Cappelini',
+  '@helo':      'Helo',
+  '@heloiza':   'Helo',
+};
+
+function detectMentions(text) {
+  const lower = text.toLowerCase();
+  return Object.entries(MENTION_MAP)
+    .filter(([tag]) => lower.includes(tag))
+    .map(([, user]) => user);
+}
+
+function currentUserName() {
+  if (_currentUserEmail.includes('cappelini')) return 'Cappelini';
+  return 'Helo';
+}
+
+async function checkAndSendMentions(projName, actionText, notesOld, notesNew) {
+  if (!notesNew || notesNew === notesOld) return;
+  const mentioned = detectMentions(notesNew);
+  const me = currentUserName();
+  for (const user of mentioned) {
+    if (user === me) continue; // não notifica a si mesmo
+    try {
+      await supa.from('girus_notifications').insert({
+        to_user:      user,
+        from_user:    me,
+        project_name: projName,
+        action_text:  actionText,
+        message:      notesNew,
+      });
+    } catch(e) { console.warn('notif erro:', e); }
+  }
+}
+
+async function loadNotifications() {
+  const me = currentUserName();
+  const { data, error } = await supa
+    .from('girus_notifications')
+    .select('*')
+    .eq('to_user', me)
+    .order('created_at', { ascending: false })
+    .limit(30);
+
+  if (error) console.warn('loadNotifications erro:', error);
+
+  const unread = (data || []).filter(n => !n.read).length;
+  const badge = document.getElementById('badge-notif');
+  if (badge) {
+    if (unread > 0) {
+      badge.textContent = unread;
+      badge.classList.add('visible');
+    } else {
+      badge.textContent = '';
+      badge.classList.remove('visible');
+    }
+  }
+
+  const el = document.getElementById('notif-list');
+  if (!el) return;
+  if (!data || !data.length) {
+    el.innerHTML = '<div class="notif-empty">Nenhuma notificação ainda.</div>';
+    return;
+  }
+  el.innerHTML = data.map(n => `
+    <div class="notif-item ${n.read ? 'read' : 'unread'}" onclick="markRead('${n.id}',this)">
+      <div class="notif-body">
+        <div class="notif-from">@menção de <strong>${n.from_user}</strong></div>
+        <div class="notif-msg">${n.message}</div>
+        <div class="notif-proj">📂 ${n.project_name} · ${n.action_text}</div>
+        <div class="notif-time">${timeAgo(n.created_at)}</div>
+      </div>
+    </div>`).join('');
+}
+
+async function markRead(id, el) {
+  el.classList.remove('unread');
+  el.classList.add('read');
+  await supa.from('girus_notifications').update({ read: true }).eq('id', id);
+  loadNotifications();
+}
+
+async function markAllRead() {
+  const me = currentUserName();
+  await supa.from('girus_notifications').update({ read: true }).eq('to_user', me).eq('read', false);
+  loadNotifications();
+}
+
+function refreshCurrentView() {
+  const active = document.querySelector('.tab-pane.active');
+  if (!active) return;
+  const id = active.id;
+  if (id === 'tab-dashboard') renderDashboard();
+  else if (id === 'tab-projetos') { renderProjectList(); if (currentProj) renderDetail(currentProj); }
+  else if (id === 'tab-briefing') renderBriefing();
+  else if (id === 'tab-meeting') renderMeeting();
+}
+
+// ══════════════════════════════════════════════════════════════
+const LS_KEY = 'girus_projetos_v1'; // mantido só para compatibilidade
+
+const INITIAL_DATA = {
+  selectedProject: null,
+  log: { decisoes: '', atencao: '', obs: '' },
+  projects: [
+    {
+      id: 'p1', name: 'Visite Floripa', cat: 'Marketing', status: 'andamento',
+      resp: 'Helo', phase: 'Contínuo', notes: 'Conta gerenciada pela Girus como serviço. Monitorar crescimento mensal.',
+      actions: [
+        { id:'a1', text:'Posts no Instagram (mín. 4/semana)', status:'andamento', resp:'Helo', deadline:'', notes:'' },
+        { id:'a2', text:'Blog — 2 artigos por mês', status:'andamento', resp:'Helo', deadline:'', notes:'' },
+        { id:'a3', text:'Acompanhar métricas (reach, engajamento, seguidores)', status:'andamento', resp:'Cappelini', deadline:'', notes:'14.508 seguidores em 25/05' },
+        { id:'a4', text:'Ativar colaboração com hotéis/parceiros para conteúdo', status:'afazer', resp:'Cappelini', deadline:'2026-06-30', notes:'' },
+      ]
+    },
+    {
+      id: 'p2', name: 'Girus Institucional', cat: 'Marketing', status: 'andamento',
+      resp: 'Helo', phase: 'Contínuo', notes: 'Manter presença digital consistente. Priorizar atualização do site.',
+      actions: [
+        { id:'a5', text:'Instagram — 1 case de sucesso por mês', status:'andamento', resp:'Helo', deadline:'', notes:'' },
+        { id:'a6', text:'Instagram — 1 post de produto/serviço por mês', status:'andamento', resp:'Helo', deadline:'', notes:'' },
+        { id:'a7', text:'Atualizar site institucional (girus.tur.br)', status:'afazer', resp:'Cappelini', deadline:'2026-06-30', notes:'Site desatualizado' },
+        { id:'a8', text:'Publicar case Santa Rosa de Lima no blog', status:'afazer', resp:'Cappelini', deadline:'2026-07-31', notes:'' },
+      ]
+    },
+    {
+      id: 'p3', name: 'Toordata', cat: 'Produto', status: 'andamento',
+      resp: 'Cappelini', phase: 'Operação', notes: 'Python + Streamlit + PostgreSQL.',
+      actions: [
+        { id:'a9', text:'Atualizar dados 1T 2026 na plataforma', status:'concluido', resp:'Cappelini', deadline:'2026-05-31', notes:'Concluído' },
+        { id:'a10', text:'Redirecionar domínios toordata.app e toordata.com.br', status:'afazer', resp:'Cappelini', deadline:'2026-06-30', notes:'Verificar DNS' },
+        { id:'a11', text:'Apresentar plataforma para Imbituba e Rancho Queimado', status:'andamento', resp:'Cappelini', deadline:'2026-07-31', notes:'' },
+        { id:'a12', text:'Documentar casos de uso para pitch comercial', status:'afazer', resp:'Helo', deadline:'2026-07-31', notes:'' },
+      ]
+    },
+    {
+      id: 'p4', name: 'Visite Mais — Plataforma', cat: 'Produto', status: 'urgente',
+      resp: 'Cappelini', phase: 'Piloto + FAPESC', notes: 'Garopaba ~40 atrativos. Santo Amaro: 9 atrativos em onboarding.',
+      actions: [
+        { id:'a13', text:'Documentar insights da plataforma (uso, check-ins)', status:'andamento', resp:'Cappelini', deadline:'2026-06-30', notes:'' },
+        { id:'a14', text:'Onboarding Santo Amaro — 9 atrativos', status:'andamento', resp:'Cappelini', deadline:'2026-06-30', notes:'' },
+        { id:'a15', text:'Definir roadmap próximas funcionalidades', status:'afazer', resp:'Cappelini', deadline:'2026-07-31', notes:'' },
+        { id:'a16', text:'Inscrição FAPESC 031/2026 — submeter até 22/06 18h', status:'urgente', resp:'Cappelini', deadline:'2026-06-22', notes:'PRAZO FATAL' },
+      ]
+    },
+    {
+      id: 'p5', name: 'Cliente_Garopaba', cat: 'Contrato', status: 'andamento',
+      resp: 'Cappelini', phase: 'Múltiplas frentes', notes: '',
+      actions: [
+        { id:'a17', text:'COMTUR — Convocar reunião + pauta junho', status:'andamento', resp:'Cappelini', deadline:'2026-06-30', notes:'' },
+        { id:'a18', text:'AGT — Capacitação de guias e anfitriões', status:'andamento', resp:'Cappelini', deadline:'2026-07-31', notes:'' },
+        { id:'a19', text:'CICLO — Definir cronograma cicloturismo', status:'afazer', resp:'Cappelini', deadline:'2026-06-30', notes:'' },
+        { id:'a20', text:'PLACAS — Acompanhar instalação sinalização', status:'andamento', resp:'Cappelini', deadline:'2026-07-31', notes:'' },
+        { id:'a21', text:'PEDONAL — Relatório diagnóstico calçadas', status:'andamento', resp:'Cappelini', deadline:'2026-07-31', notes:'' },
+        { id:'a22', text:'COMUNICAÇÃO — Calendário editorial jun/jul', status:'andamento', resp:'Helo', deadline:'2026-06-30', notes:'' },
+        { id:'a23', text:'AIRBNB — Projeto cancelado pelo cliente', status:'bloqueado', resp:'Cappelini', deadline:'', notes:'Cancelado' },
+      ]
+    },
+    {
+      id: 'p6', name: 'Cliente_Rancho_Queimado', cat: 'Contrato', status: 'urgente',
+      resp: 'Cappelini', phase: 'Fase 3 — Diagnóstico', notes: '12 fases totais.',
+      actions: [
+        { id:'a24', text:'Visitas técnicas — 2 empresas restantes (16-17/06)', status:'urgente', resp:'Cappelini', deadline:'2026-06-16', notes:'' },
+        { id:'a25', text:'Fechar diagnóstico das últimas 2 empresas', status:'urgente', resp:'Cappelini', deadline:'2026-06-17', notes:'' },
+        { id:'a26', text:'Compilar relatório final fase 3', status:'afazer', resp:'Cappelini', deadline:'2026-06-30', notes:'' },
+        { id:'a27', text:'Apresentar proposta VisiteMais + Mapa (R$108k)', status:'andamento', resp:'Cappelini', deadline:'2026-07-31', notes:'Aguardando resposta' },
+        { id:'a28', text:'Acompanhar aprovação orçamentária da Prefeitura', status:'andamento', resp:'Cappelini', deadline:'2026-07-31', notes:'' },
+      ]
+    },
+    {
+      id: 'p7', name: 'Cliente_Santo_Amaro', cat: 'Contrato', status: 'andamento',
+      resp: 'Helo/Cappelini', phase: 'Onboarding + conteúdo', notes: '',
+      actions: [
+        { id:'a29', text:'Publicações de junho — conteúdo agendado', status:'concluido', resp:'Helo', deadline:'2026-06-30', notes:'Concluído' },
+        { id:'a30', text:'Placas de cabeceira (banner entrada cidade)', status:'andamento', resp:'Cappelini', deadline:'2026-07-31', notes:'Em desenvolvimento' },
+        { id:'a31', text:'Inserir 9 atrativos no Visite Mais', status:'andamento', resp:'Cappelini', deadline:'2026-06-30', notes:'' },
+        { id:'a32', text:'Elaborar plano de ativação dos atrativos', status:'afazer', resp:'Cappelini', deadline:'2026-07-31', notes:'' },
+        { id:'a33', text:'Reunião com Secretaria de Turismo (alinhamento)', status:'afazer', resp:'Cappelini', deadline:'2026-06-30', notes:'' },
+      ]
+    },
+    {
+      id: 'p8', name: 'Cliente_Floripa_Biosphere', cat: 'Contrato', status: 'andamento',
+      resp: 'Cappelini', phase: 'Evidências + Starters', notes: 'Representante oficial Biosphere no Brasil.',
+      actions: [
+        { id:'a34', text:'Gerar evidências até ODS8 (doc Word por indicador)', status:'andamento', resp:'Cappelini', deadline:'2026-08-31', notes:'' },
+        { id:'a35', text:'Plano Starters empresas — em andamento', status:'andamento', resp:'Cappelini', deadline:'2026-07-31', notes:'' },
+        { id:'a36', text:'Relatório de progresso auditoria para SETUR', status:'afazer', resp:'Cappelini', deadline:'2026-08-31', notes:'' },
+        { id:'a37', text:'Atualizar planilha controle evidências por ODS', status:'andamento', resp:'Cappelini', deadline:'', notes:'Contínuo' },
+      ]
+    },
+    {
+      id: 'p9', name: 'Cliente_Gov_Celso_Ramos', cat: 'Contrato', status: 'andamento',
+      resp: 'Cappelini', phase: 'Fase 5', notes: 'Roteiro Anhatomirim Caminhos. Edital publicado.',
+      actions: [
+        { id:'a38', text:'Fase 5 — Acompanhar edital publicado', status:'andamento', resp:'Cappelini', deadline:'2026-07-31', notes:'Edital publicado' },
+        { id:'a39', text:'Monitorar processo licitatório', status:'andamento', resp:'Cappelini', deadline:'2026-07-31', notes:'' },
+        { id:'a40', text:'Apoiar comunicação do projeto com prefeitura', status:'afazer', resp:'Cappelini', deadline:'2026-07-31', notes:'' },
+      ]
+    },
+    {
+      id: 'p10', name: 'Cliente_Imbituba', cat: 'Contrato', status: 'urgente',
+      resp: 'Cappelini', phase: 'Entrega + faturamento', notes: 'VisiteMais R$19.800 + COMTUR R$7.200 = R$27k/ano.',
+      actions: [
+        { id:'a41', text:'Entrega ao Prefeito — apresentação diagnóstico', status:'concluido', resp:'Cappelini', deadline:'2026-06-08', notes:'Realizado 08/06' },
+        { id:'a42', text:'Apresentação à Câmara Municipal', status:'urgente', resp:'Cappelini', deadline:'2026-06-15', notes:'URGENTE' },
+        { id:'a43', text:'Emitir NF e faturar primeira parcela', status:'afazer', resp:'Cappelini', deadline:'2026-06-30', notes:'Após Câmara' },
+        { id:'a44', text:'Proposta VisiteMais + COMTUR (R$27k/ano) — fechar', status:'afazer', resp:'Cappelini', deadline:'2026-07-31', notes:'Aguardando' },
+      ]
+    },
+    {
+      id: 'p11', name: 'Sítio Buraco Fundo', cat: 'Serviço', status: 'andamento',
+      resp: 'Helo', phase: 'Operação contínua', notes: 'Contrato de gestão de redes sociais.',
+      actions: [
+        { id:'a45', text:'Publicações mensais — Instagram e Facebook', status:'andamento', resp:'Helo', deadline:'', notes:'Contínuo' },
+        { id:'a46', text:'Revisar calendário de conteúdo julho', status:'afazer', resp:'Helo', deadline:'2026-06-30', notes:'' },
+      ]
+    },
+    {
+      id: 'p12', name: 'FAPESC 031/2026', cat: 'Estratégico', status: 'urgente',
+      resp: 'Cappelini', phase: 'Inscrição', notes: 'Pasta: Girus - MVPs/Edtal_Fapesc_Acelera_SC/',
+      actions: [
+        { id:'a47', text:'Revisar formulário de inscrição (todos os campos)', status:'andamento', resp:'Cappelini', deadline:'2026-06-22', notes:'' },
+        { id:'a48', text:'Elaborar pitch/apresentação do produto para banca', status:'andamento', resp:'Cappelini', deadline:'2026-06-22', notes:'' },
+        { id:'a49', text:'Consolidar dados de tração (check-ins, atrativos)', status:'andamento', resp:'Cappelini', deadline:'2026-06-22', notes:'' },
+        { id:'a50', text:'Submeter inscrição no portal FAPESC até 18h', status:'afazer', resp:'Cappelini', deadline:'2026-06-22', notes:'PRAZO FATAL' },
+      ]
+    }    ,
+    {
+      id: 'p13', name: 'MVP Turismo em Destaque', cat: 'Produto', status: 'andamento',
+      resp: 'Cappelini', phase: 'Prospecção', notes: 'Assinatura de marketing + gestão com IA para MPEs turísticas. Plano Básico R$397/mês · Pro R$597/mês. Contrato mínimo 3 meses.',
+      actions: [
+        { id:'a51', text:'Confirmar 1 cliente piloto pagante', status:'urgente', resp:'Cappelini', deadline:'2026-06-30', notes:'Meta: dia 45' },
+        { id:'a52', text:'Prospectar via WhatsApp (lista de prospects)', status:'andamento', resp:'Cappelini', deadline:'2026-06-30', notes:'Usar script-prospeccao.docx' },
+        { id:'a53', text:'Enviar proposta formal para 3 prospects qualificados', status:'afazer', resp:'Cappelini', deadline:'2026-06-30', notes:'proposta-turismo-em-destaque.docx' },
+        { id:'a54', text:'Atualizar número WhatsApp na landing page', status:'afazer', resp:'Cappelini', deadline:'2026-06-20', notes:'landing-page.html' },
+        { id:'a55', text:'Gerar diagnóstico digital PDF para cada prospect', status:'andamento', resp:'Cappelini', deadline:'', notes:'Skill: diagnostico-turismo-pdf' },
+        { id:'a56', text:'Fechar 1º contrato pago', status:'afazer', resp:'Cappelini', deadline:'2026-07-15', notes:'Meta final do piloto' },
+      ]
+    },
+    {
+      id: 'p14', name: 'MVP Monitor de Pricing', cat: 'Produto', status: 'andamento',
+      resp: 'Cappelini', phase: 'Validação com pilotos', notes: 'SaaS B2B — monitora preços de concorrentes + calcula piso de custo real antes de sugerir preço. Tipologias: Pousada · Guia · Atrativo · Restaurante.',
+      actions: [
+        { id:'a57', text:'Entrevistar 3 clientes piloto para validar ferramentas', status:'urgente', resp:'Cappelini', deadline:'2026-06-30', notes:'Validar ferramenta-precificacao + planilha diagnóstico separadamente' },
+        { id:'a58', text:'Validar ferramenta-precificacao.html com pilotos', status:'andamento', resp:'Cappelini', deadline:'2026-07-15', notes:'H1: validar separado' },
+        { id:'a59', text:'Validar planilha Diagnóstico Financeiro v3 com pilotos', status:'andamento', resp:'Cappelini', deadline:'2026-07-15', notes:'4 tipologias, 9 abas, 425 fórmulas' },
+        { id:'a60', text:'Documentar aprendizados e ajustar produto', status:'afazer', resp:'Cappelini', deadline:'2026-07-31', notes:'' },
+        { id:'a61', text:'Planejar integração via localStorage (custos → piso pricing)', status:'afazer', resp:'Cappelini', deadline:'2026-08-31', notes:'H2: integrar ferramentas' },
+        { id:'a62', text:'Atualizar relatório da pesquisa B2B (n=11)', status:'afazer', resp:'Cappelini', deadline:'', notes:'Se chegarem novas respostas' },
+      ]
+    },
+    {
+      id: 'p15', name: 'MVP Guias e AGT', cat: 'Produto', status: 'andamento',
+      resp: 'Cappelini', phase: 'Validação — 13 leads', notes: 'Plataforma de gestão de experiências (agenda + reservas + confirmação WA). 20 respostas de pesquisa, 70% interesse, 13 leads qualificados.',
+      actions: [
+        { id:'a63', text:'Realizar as 13 conversas de validação com leads', status:'urgente', resp:'Cappelini', deadline:'2026-06-30', notes:'Usar followup-leads-apresentacao.html' },
+        { id:'a64', text:'Enviar disparo WhatsApp para lista de contatos', status:'andamento', resp:'Cappelini', deadline:'2026-06-20', notes:'whatsapp-disparo-guias.html' },
+        { id:'a65', text:'Agendar Google Meet com leads mais quentes', status:'andamento', resp:'Cappelini', deadline:'2026-06-25', notes:'followup-leads-apresentacao.html (11 slides)' },
+        { id:'a66', text:'Lançar beta fechado jun/jul 2026', status:'afazer', resp:'Cappelini', deadline:'2026-07-15', notes:'3 funcionalidades: agenda + link reserva + confirmação WA' },
+        { id:'a67', text:'Documentar feedback dos leads (ajustes de produto)', status:'afazer', resp:'Cappelini', deadline:'2026-07-31', notes:'' },
+      ]
+    },
+    {
+      id: 'p16', name: 'TurisFlow', cat: 'Produto', status: 'andamento',
+      resp: 'Cappelini', phase: 'Validação + comercial', notes: 'SaaS de gestão de processos e governança para COMTURs. Apresentação Sebrae criada. Validação com Comtur_FLN concluída.',
+      actions: [
+        { id:'a68', text:'Proposta comercial para 2 municípios SC', status:'andamento', resp:'Cappelini', deadline:'2026-07-31', notes:'Paulo Lopes e outros' },
+        { id:'a69', text:'Melhorias da landing page (itens alta prioridade)', status:'afazer', resp:'Cappelini', deadline:'2026-07-31', notes:'Prompt_Replit_AltaPrioridade.md' },
+        { id:'a70', text:'Apresentação TurisFlow para Sebrae — revisão final', status:'concluido', resp:'Cappelini', deadline:'2026-06-10', notes:'TurisFlow_Apresentacao_Sebrae.html criado' },
+        { id:'a71', text:'Definir modelo de precificação SaaS por município', status:'afazer', resp:'Cappelini', deadline:'2026-07-31', notes:'' },
+        { id:'a72', text:'Documentar roadmap de produto 2026/2027', status:'afazer', resp:'Cappelini', deadline:'2026-08-31', notes:'' },
+      ]
+    }
+  ]
+};
+
+// ══════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════
+
+let state = JSON.parse(JSON.stringify(INITIAL_DATA)); // estado inicial vazio até auth carregar
+let currentProj = null;
+
+function uid() {
+  return 'id_' + Math.random().toString(36).substr(2, 9);
+}
+
+// ══════════════════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════════════════
+const STATUS_LABEL = {
+  urgente: 'Urgente', andamento: 'Em Andamento',
+  afazer: 'A Fazer', concluido: 'Concluído', bloqueado: 'Bloqueado'
+};
+const CAT_ORDER = ['Contrato','Produto','Marketing','Estratégico','Serviço'];
+
+function fmtDate(d) {
+  if (!d) return '—';
+  const [y,m,day] = d.split('-');
+  return `${day}/${m}/${y}`;
+}
+
+function deadClass(deadline) {
+  if (!deadline) return '';
+  const now = new Date(); now.setHours(0,0,0,0);
+  const d = new Date(deadline + 'T00:00:00');
+  const diff = (d - now) / 86400000;
+  if (diff < 0) return 'd-urgente';
+  if (diff <= 7) return 'd-urgente';
+  if (diff <= 14) return 'd-soon';
+  return 'd-ok';
+}
+
+function isThisWeek(deadline) {
+  if (!deadline) return false;
+  const now = new Date(); now.setHours(0,0,0,0);
+  const d = new Date(deadline + 'T00:00:00');
+  return (d - now) / 86400000 <= 7;
+}
+
+// ══════════════════════════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════════════════════════
+function showTab(name) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  const navMap={dashboard:0,projetos:1,briefing:2,reuniao:3,atividade:4,notificacoes:5,guia:6};
+  const btns=document.querySelectorAll('.nav-item');
+  if(navMap[name]!==undefined) btns[navMap[name]].classList.add('active');
+  if (name === 'dashboard')    renderDashboard();
+  if (name === 'projetos')     renderProjectList();
+  if (name === 'briefing')     renderBriefing();
+  if (name === 'reuniao')      renderMeeting();
+  if (name === 'atividade')    { loadActivity(true); }
+  if (name === 'notificacoes') { loadNotifications(); }
+}
+
+// ══════════════════════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════════════════════
+function renderDashboard() {
+  const all = state.projects;
+  const allActions = all.flatMap(p => p.actions.map(a => ({...a, projName: p.name, projCat: p.cat})));
+  const urgent = allActions.filter(a => a.status === 'urgente' && a.status !== 'concluido');
+  const thisWeek = allActions.filter(a => a.status !== 'concluido' && a.status !== 'bloqueado' && isThisWeek(a.deadline) && a.status !== 'urgente');
+  const wip = allActions.filter(a => a.status === 'andamento');
+  const done = allActions.filter(a => a.status === 'concluido').slice(-6).reverse();
+
+  // KPIs
+  const strip = document.getElementById('kpi-strip');
+  strip.innerHTML = `
+    <div class="kpi-card"><div class="kpi-val">${all.length}</div><div class="kpi-label">Projetos Ativos</div></div>
+    <div class="kpi-card urgent"><div class="kpi-val">${urgent.length + thisWeek.length}</div><div class="kpi-label">Urgente / Semana</div></div>
+    <div class="kpi-card teal"><div class="kpi-val">${wip.length}</div><div class="kpi-label">Em Andamento</div></div>
+    <div class="kpi-card amber"><div class="kpi-val">${allActions.filter(a=>a.status==='afazer').length}</div><div class="kpi-label">A Fazer</div></div>
+    <div class="kpi-card"><div class="kpi-val">${allActions.filter(a=>a.status==='concluido').length}</div><div class="kpi-label">Concluídas</div></div>
+  `;
+
+  // Urgent list
+  const urgentEl = document.getElementById('dash-urgent');
+  const urgItems = [...urgent, ...thisWeek];
+  urgentEl.innerHTML = urgItems.length ? urgItems.map(a => `
+    <div class="dash-item">
+      <span class="dash-item-proj">${a.projName}</span>
+      <span class="dash-item-txt">${a.text}</span>
+      <span class="dash-item-dead ${deadClass(a.deadline)}">${fmtDate(a.deadline)}</span>
+    </div>`).join('') : '<div class="empty-msg">Nenhum item urgente. 🎉</div>';
+
+  // WIP
+  const wipEl = document.getElementById('dash-wip');
+  wipEl.innerHTML = wip.slice(0,8).map(a => `
+    <div class="dash-item">
+      <span class="dash-item-proj">${a.projName}</span>
+      <span class="dash-item-txt">${a.text}</span>
+      <span class="dash-item-dead soon">${fmtDate(a.deadline)}</span>
+    </div>`).join('') || '<div class="empty-msg">Nenhuma ação em andamento.</div>';
+
+  // Projects overview
+  const projEl = document.getElementById('dash-projects');
+  projEl.innerHTML = all.map(p => {
+    const aUrg = p.actions.filter(a=>a.status==='urgente').length;
+    const aWip = p.actions.filter(a=>a.status==='andamento').length;
+    const aDone = p.actions.filter(a=>a.status==='concluido').length;
+    const badge = aUrg ? `<span style="color:var(--coral);font-weight:700;font-size:11px">⚡ ${aUrg} urgente${aUrg>1?'s':''}</span>` : `<span style="color:var(--gray4);font-size:11px">${aWip} andamento · ${aDone} ok</span>`;
+    return `<div class="dash-item" style="cursor:pointer" onclick="showTab('projetos');selectProject('${p.id}')">
+      <span class="status-dot dot-${p.status}"></span>
+      <span class="dash-item-proj">${p.name}</span>
+      <span class="dash-item-txt">${badge}</span>
+    </div>`;
+  }).join('');
+
+  // Done
+  const doneEl = document.getElementById('dash-done');
+  doneEl.innerHTML = done.map(a => `
+    <div class="dash-item">
+      <span class="dash-item-proj">${a.projName}</span>
+      <span class="dash-item-txt">${a.text}</span>
+      <span style="color:var(--teal);font-size:11px;font-weight:600">✓</span>
+    </div>`).join('') || '<div class="empty-msg">Nenhuma ação concluída ainda.</div>';
+}
+
+// ══════════════════════════════════════════════════════════════
+// PROJECT LIST
+// ══════════════════════════════════════════════════════════════
+function renderProjectList() {
+  const list = document.getElementById('proj-list');
+  const grouped = {};
+  CAT_ORDER.forEach(c => grouped[c] = []);
+  state.projects.forEach(p => { if (!grouped[p.cat]) grouped[p.cat] = []; grouped[p.cat].push(p); });
+
+  list.innerHTML = CAT_ORDER.filter(c => grouped[c].length > 0).map(cat => `
+    <div class="cat-group">
+      <div class="cat-label">${cat}</div>
+      ${grouped[cat].map(p => `
+        <div class="proj-item ${currentProj === p.id ? 'selected':''}" onclick="selectProject('${p.id}')">
+          <span class="status-dot dot-${p.status}"></span>
+          <span>${p.name}</span>
+        </div>`).join('')}
+    </div>`).join('');
+
+  if (currentProj) renderDetail(currentProj);
+}
+
+function selectProject(id) {
+  currentProj = id;
+  renderProjectList();
+  renderDetail(id);
+}
+
+// Track current view per project
+const projViews = {};
+
+function renderDetail(id) {
+  const view = projViews[id] || 'lista';
+  renderDetailWithView(id, view);
+}
+
+function setView(id, view) {
+  projViews[id] = view;
+  renderDetailWithView(id, view);
+}
+
+function renderDetailWithView(id, view) {
+  const p = state.projects.find(x => x.id === id);
+  if (!p) return;
+  const detail = document.getElementById('proj-detail');
+
+  const urgCount = p.actions.filter(a=>a.status==='urgente').length;
+  const catClass = `cat-${p.cat}`;
+
+  const viewToggle = `
+    <div class="view-toggle">
+      <button class="view-btn ${view==='lista'?'active':''}" onclick="setView('${p.id}','lista')">≡ Lista</button>
+      <button class="view-btn ${view==='kanban'?'active':''}" onclick="setView('${p.id}','kanban')">□ Kanban</button>
+      <button class="view-btn ${view==='timeline'?'active':''}" onclick="setView('${p.id}','timeline')">— Timeline</button>
+    </div>`;
+
+  detail.innerHTML = `
+    <div class="detail-hd">
+      <div class="detail-title">${p.name}</div>
+      <span class="cat-badge ${catClass}">${p.cat}</span>
+      <button class="btn-add" style="background:var(--gray2);color:var(--gray5);margin-left:4px" onclick="openProjModal('${p.id}')">✏ Editar</button>
+    </div>
+    <div class="detail-meta">
+      <div class="meta-item"><strong>Status:</strong> <span class="proj-status-${p.status}">${STATUS_LABEL[p.status]||p.status}</span></div>
+      <div class="meta-item"><strong>Responsável:</strong> ${p.resp}</div>
+      <div class="meta-item"><strong>Fase:</strong> ${p.phase}</div>
+      <div class="meta-item"><strong>Ações:</strong> ${p.actions.length} total · ${urgCount} urgente${urgCount!==1?'s':''}</div>
+    </div>
+    ${p.notes ? `<div class="detail-notes-wrap"><div class="detail-notes">📝 ${p.notes}</div></div>` : ''}
+    <div class="actions-hd">
+      Ações / Entregas
+      <div style="display:flex;gap:8px;align-items:center">
+        ${viewToggle}
+        <button class="btn-add" onclick="openActionModal('${p.id}')">+ Nova Ação</button>
+      </div>
+    </div>
+    <div id="actions-view-${p.id}"></div>`;
+
+  if (view === 'lista') renderListView(p);
+  else if (view === 'kanban') renderKanbanView(p);
+  else renderTimelineView(p);
+}
+
+// ── LISTA ────────────────────────────────────────────────────────────────────
+const listSort = {}; // { [projId]: { col: 'tema'|'resp'|'deadline', dir: 1|-1 } }
+
+function toggleSort(projId, col) {
+  const cur = listSort[projId] || { col: null, dir: 1 };
+  if (cur.col === col) {
+    listSort[projId] = { col, dir: cur.dir * -1 };
+  } else {
+    listSort[projId] = { col, dir: 1 };
+  }
+  const p = state.projects.find(x => x.id === projId);
+  renderListView(p);
+}
+
+function sortedActions(p) {
+  const s = listSort[p.id];
+  if (!s || !s.col) return p.actions;
+  return [...p.actions].sort((a, b) => {
+    let va = '', vb = '';
+    if (s.col === 'tema')     { va = (a.tema||'').toLowerCase(); vb = (b.tema||'').toLowerCase(); }
+    if (s.col === 'resp')     { va = (a.resp||'').toLowerCase(); vb = (b.resp||'').toLowerCase(); }
+    if (s.col === 'deadline') { va = a.deadline||'9999'; vb = b.deadline||'9999'; }
+    if (va < vb) return -1 * s.dir;
+    if (va > vb) return  1 * s.dir;
+    return 0;
+  });
+}
+
+function sortIcon(projId, col) {
+  const s = listSort[projId];
+  if (!s || s.col !== col) return '<span style="opacity:.3;margin-left:4px">⇅</span>';
+  return s.dir === 1
+    ? '<span style="margin-left:4px;color:var(--teal2)">↑</span>'
+    : '<span style="margin-left:4px;color:var(--teal2)">↓</span>';
+}
+
+function renderListView(p) {
+  const el = document.getElementById('actions-view-' + p.id);
+  const actions = sortedActions(p);
+  const thStyle = 'cursor:pointer;user-select:none;white-space:nowrap';
+  el.innerHTML = `
+    <div style="overflow-x:auto">
+    <table class="actions-table">
+      <thead><tr>
+        <th style="width:35%;${thStyle}" onclick="toggleSort('${p.id}','tema')">Ação / Entrega${sortIcon(p.id,'tema')}</th>
+        <th>Status</th>
+        <th style="${thStyle}" onclick="toggleSort('${p.id}','resp')">Responsável${sortIcon(p.id,'resp')}</th>
+        <th style="${thStyle}" onclick="toggleSort('${p.id}','deadline')">Prazo${sortIcon(p.id,'deadline')}</th>
+        <th>Observação</th>
+        <th></th>
+      </tr></thead>
+      <tbody>
+      ${actions.map(a => `
+        <tr class="${a.status==='concluido'?'done':''}">
+          <td>
+            ${a.tema ? `<span style="font-size:10px;font-weight:600;background:var(--lamber);color:var(--amber2);border:1px solid rgba(233,196,106,.3);padding:1px 7px;border-radius:10px;margin-right:5px">${a.tema}</span>` : ''}
+            ${a.text}
+          </td>
+          <td><span class="status-badge s-${a.status}">${STATUS_LABEL[a.status]||a.status}</span></td>
+          <td>${a.resp}</td>
+          <td class="${deadClass(a.deadline)}">${fmtDate(a.deadline)}</td>
+          <td style="color:var(--gray4);font-size:11px;font-style:italic">${a.notes}</td>
+          <td>
+            <div class="action-btns">
+              ${a.status !== 'concluido'
+                ? `<button class="btn-done" onclick="toggleDone('${p.id}','${a.id}')">✓</button>`
+                : `<button class="btn-undo" onclick="toggleDone('${p.id}','${a.id}')">↩</button>`}
+              <button onclick="openActionModal('${p.id}','${a.id}')">✏</button>
+            </div>
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+    </div>`;
+}
+
+// ── KANBAN ───────────────────────────────────────────────────────────────────
+const KANBAN_COLS = [
+  { key:'afazer',   label:'📋 A Fazer',       hd:'background:rgba(139,148,158,.12);color:#8B949E;' },
+  { key:'andamento',label:'🔄 Em Andamento',  hd:'background:rgba(59,110,168,.18);color:#3B6EA8;' },
+  { key:'urgente',  label:'🔥 Urgente',       hd:'background:rgba(232,96,76,.18);color:#E8604C;' },
+  { key:'bloqueado',label:'🚫 Bloqueado',     hd:'background:rgba(230,81,0,.15);color:#FF8040;' },
+  { key:'concluido',label:'✅ Concluído',     hd:'background:rgba(42,157,143,.18);color:#2A9D8F;' },
+];
+const STATUS_ORDER = ['afazer','andamento','urgente','bloqueado','concluido'];
+
+function kanbanMoveStatus(projId, actionId, dir) {
+  const p = state.projects.find(x => x.id === projId);
+  const a = p.actions.find(x => x.id === actionId);
+  const idx = STATUS_ORDER.indexOf(a.status);
+  if (dir === -1 && idx > 0) a.status = STATUS_ORDER[idx-1];
+  if (dir === 1 && idx < STATUS_ORDER.length-1) a.status = STATUS_ORDER[idx+1];
+  saveState();
+  renderKanbanView(p);
+}
+
+function renderKanbanView(p) {
+  const el = document.getElementById('actions-view-' + p.id);
+  const cols = KANBAN_COLS.map(col => {
+    const cards = p.actions.filter(a => a.status === col.key);
+    return `
+      <div class="kanban-col">
+        <div class="kanban-col-hd" style="${col.hd}">
+          <span>${col.label}</span>
+          <span style="opacity:.6">${cards.length}</span>
+        </div>
+        ${cards.length === 0 ? '<div class="kanban-empty">—</div>' :
+          cards.map(a => {
+            const idx = STATUS_ORDER.indexOf(col.key);
+            return `
+            <div class="kanban-card" onclick="openActionModal('${p.id}','${a.id}')">
+              ${a.tema ? `<div style="font-size:10px;font-weight:700;color:var(--amber2);margin-bottom:4px;letter-spacing:.3px">${a.tema}</div>` : ''}
+              <div class="kanban-card-title">${a.text}</div>
+              <div class="kanban-card-meta">
+                <span class="kanban-card-resp">${a.resp}</span>
+                ${a.deadline ? `<span class="kanban-card-dead ${deadClass(a.deadline)}">${fmtDate(a.deadline)}</span>` : ''}
+              </div>
+              ${a.notes ? `<div class="kanban-card-notes">${a.notes}</div>` : ''}
+              <div class="kanban-move-btn" onclick="event.stopPropagation()">
+                ${idx > 0 ? `<span onclick="kanbanMoveStatus('${p.id}','${a.id}',-1)">← ${STATUS_LABEL[STATUS_ORDER[idx-1]]}</span>` : ''}
+                ${idx < STATUS_ORDER.length-1 ? `<span onclick="kanbanMoveStatus('${p.id}','${a.id}',1)">→ ${STATUS_LABEL[STATUS_ORDER[idx+1]]}</span>` : ''}
+              </div>
+            </div>`;
+          }).join('')
+        }
+      </div>`;
+  });
+  el.innerHTML = `<div class="kanban-board">${cols.join('')}</div>`;
+}
+
+// ── TIMELINE ─────────────────────────────────────────────────────────────────
+function renderTimelineView(p) {
+  const el = document.getElementById('actions-view-' + p.id);
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  function daysLeft(deadline) {
+    if (!deadline) return null;
+    const d = new Date(deadline + 'T00:00:00');
+    return Math.ceil((d - today) / 86400000);
+  }
+
+  function barPct(dl) {
+    if (dl === null) return 0;
+    if (dl < 0) return 100;
+    if (dl > 60) return 5;
+    return Math.round(100 - (dl / 60) * 95);
+  }
+
+  function barColor(dl) {
+    if (dl === null) return 'var(--gray3)';
+    if (dl < 0) return 'var(--coral)';
+    if (dl <= 7) return 'var(--coral)';
+    if (dl <= 14) return var_amber();
+    return 'var(--teal)';
+  }
+
+  function var_amber() { return '#E9C46A'; }
+
+  function daysLabel(dl) {
+    if (dl === null) return '—';
+    if (dl < 0) return `${Math.abs(dl)}d atraso`;
+    if (dl === 0) return 'Hoje!';
+    if (dl === 1) return 'Amanhã';
+    return `${dl} dias`;
+  }
+
+  // Group: overdue, this week, this month, later, no deadline
+  const groups = [
+    { label: '🔴 Atrasado', filter: a => { const dl = daysLeft(a.deadline); return dl !== null && dl < 0 && a.status !== 'concluido'; } },
+    { label: '🟡 Esta Semana', filter: a => { const dl = daysLeft(a.deadline); return dl !== null && dl >= 0 && dl <= 7 && a.status !== 'concluido'; } },
+    { label: '📅 Próximos 30 dias', filter: a => { const dl = daysLeft(a.deadline); return dl !== null && dl > 7 && dl <= 30 && a.status !== 'concluido'; } },
+    { label: '📆 Mais de 30 dias', filter: a => { const dl = daysLeft(a.deadline); return dl !== null && dl > 30 && a.status !== 'concluido'; } },
+    { label: '✅ Concluído', filter: a => a.status === 'concluido' },
+    { label: '📋 Sem Prazo', filter: a => !a.deadline && a.status !== 'concluido' },
+  ];
+
+  function row(a) {
+    const dl = daysLeft(a.deadline);
+    const pct = barPct(dl);
+    const bc = barColor(dl);
+    const dlabel = daysLabel(dl);
+    return `
+      <div class="timeline-row ${a.status==='concluido'?'done-tl':''}" onclick="openActionModal('${p.id}','${a.id}')">
+        <div>
+          ${a.tema ? `<div style="font-size:10px;font-weight:700;color:var(--amber2);margin-bottom:2px;letter-spacing:.3px">${a.tema}</div>` : ''}
+          <div class="timeline-task">${a.text}</div>
+          ${a.notes ? `<div style="font-size:10px;color:var(--gray4);font-style:italic">${a.notes}</div>` : ''}
+          <div class="timeline-bar-outer"><div class="timeline-bar-inner" style="width:${pct}%;background:${bc}"></div></div>
+        </div>
+        <div><span class="status-badge s-${a.status}">${STATUS_LABEL[a.status]||a.status}</span></div>
+        <div style="font-size:11px;color:var(--gray4)">${a.resp}</div>
+        <div style="font-size:11px;font-weight:600" class="${deadClass(a.deadline)}">${fmtDate(a.deadline)}<br><span style="font-weight:400;color:var(--gray4)">${dlabel}</span></div>
+      </div>`;
+  }
+
+  let html = `
+    <div class="timeline-wrap">
+    <div class="timeline-header">
+      <div>Ação</div><div>Status</div><div>Resp.</div><div>Prazo</div>
+    </div>`;
+
+  groups.forEach(g => {
+    const items = p.actions.filter(g.filter);
+    if (items.length === 0) return;
+    html += `<div class="tl-group-label">${g.label} (${items.length})</div>`;
+    items.sort((a,b) => {
+      if (!a.deadline) return 1;
+      if (!b.deadline) return -1;
+      return a.deadline.localeCompare(b.deadline);
+    });
+    html += items.map(row).join('');
+  });
+
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+
+
+function toggleDone(projId, actionId) {
+  const p = state.projects.find(x => x.id === projId);
+  const a = p.actions.find(x => x.id === actionId);
+  const wasConcluido = a.status === 'concluido';
+  a.status = wasConcluido ? 'andamento' : 'concluido';
+  logActivity(projId, p.name, a.text, wasConcluido ? 'reaberto' : 'concluido', '');
+  saveState();
+  renderDetail(projId);
+}
+
+
+// ── NAVIGATION HELPERS ─────────────────────────────────────────────────────
+function goToProject(projId) {
+  showTab('projetos');
+  setTimeout(() => selectProject(projId), 80);
+}
+
+function goToAction(projId, actionId) {
+  showTab('projetos');
+  setTimeout(() => {
+    selectProject(projId);
+    setTimeout(() => openActionModal(projId, actionId), 120);
+  }, 80);
+}
+// ══════════════════════════════════════════════════════════════
+// BRIEFING
+// ══════════════════════════════════════════════════════════════
+const briefingSort = { col: 'deadline', dir: 1 }; // default: prazo asc
+
+function setBriefingSort(col) {
+  if (briefingSort.col === col) briefingSort.dir *= -1;
+  else { briefingSort.col = col; briefingSort.dir = 1; }
+  renderBriefing();
+}
+
+function sortForBriefing(items) {
+  const { col, dir } = briefingSort;
+  return [...items].sort((a, b) => {
+    let va = '', vb = '';
+    if (col === 'tema')     { va = (a.tema||'').toLowerCase(); vb = (b.tema||'').toLowerCase(); }
+    if (col === 'resp')     { va = (a.resp||'').toLowerCase(); vb = (b.resp||'').toLowerCase(); }
+    if (col === 'deadline') { va = a.deadline||'9999'; vb = b.deadline||'9999'; }
+    if (va < vb) return -1 * dir;
+    if (va > vb) return  1 * dir;
+    return 0;
+  });
+}
+
+function briefingSortBtn(col, label) {
+  const active = briefingSort.col === col;
+  const icon = active ? (briefingSort.dir === 1 ? ' ↑' : ' ↓') : '';
+  const style = active
+    ? 'background:var(--lteal);color:var(--teal2);border-color:var(--teal);'
+    : 'background:none;color:var(--text3);border-color:var(--border2);';
+  return `<button onclick="setBriefingSort('${col}')"
+    style="${style}border:1px solid;border-radius:var(--rs);padding:2px 10px;font-size:11px;cursor:pointer;font-family:var(--font)">
+    ${label}${icon}
+  </button>`;
+}
+
+function renderBriefing() {
+  const today = new Date();
+  const todayStr = today.toLocaleDateString('pt-BR', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+  const allActions = state.projects.flatMap(p => p.actions.map(a => ({...a, projName:p.name, projId:p.id})));
+  const urgent = allActions.filter(a => a.status==='urgente');
+  const week = allActions.filter(a => a.status!=='concluido' && a.status!=='bloqueado' && a.status!=='urgente' && isThisWeek(a.deadline));
+  const wip = allActions.filter(a => a.status==='andamento' && !isThisWeek(a.deadline));
+  const todo = allActions.filter(a => a.status==='afazer' && !isThisWeek(a.deadline));
+
+  function rowItem(a) {
+    return `
+      <div class="briefing-row" style="cursor:pointer"
+           title="Abrir ação em Projetos"
+           onclick="goToAction('${a.projId}','${a.id}')"
+           onmouseover="this.style.background='var(--surface2)'"
+           onmouseout="this.style.background=''">
+        <span class="br-proj" style="display:flex;flex-direction:column;gap:3px">
+          ${a.projName}
+          <span style="font-size:10px;color:var(--teal2);font-weight:400;letter-spacing:.2px">↗ abrir</span>
+        </span>
+        <span class="br-action">
+          ${a.tema ? `<span style="font-size:10px;font-weight:700;background:var(--lamber);color:var(--amber2);border:1px solid rgba(233,196,106,.25);padding:1px 7px;border-radius:10px;margin-right:5px">${a.tema}</span>` : ''}
+          ${a.text}${a.notes ? ` <em style="color:var(--text3);font-size:11px">(${a.notes})</em>` : ''}
+        </span>
+        <span class="br-resp">${a.resp}</span>
+        <span class="br-dead ${deadClass(a.deadline)}">${fmtDate(a.deadline)}</span>
+      </div>`;
+  }
+
+  // Flat sorted rows (sem agrupamento quando há sort ativo)
+  function rows(items) {
+    if (!items.length) return '<div style="color:var(--text3);font-size:13px;font-style:italic;padding:4px 0">Nenhum item.</div>';
+    const sorted = sortForBriefing(items);
+    return sorted.map(rowItem).join('');
+  }
+
+  // By responsible
+  const capp = allActions.filter(a => a.status!=='concluido' && a.resp==='Cappelini');
+  const helo = allActions.filter(a => a.status!=='concluido' && a.resp==='Helo');
+
+  document.getElementById('briefing-content').innerHTML = `
+    <div class="briefing-card">
+      <div class="briefing-hd">
+        📋 Briefing do Dia — Girus Projetos
+        <small>${todayStr}</small>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 16px;border-bottom:1px solid var(--border);background:var(--surface2)">
+        <span style="font-size:11px;color:var(--text3);margin-right:4px">Ordenar por:</span>
+        ${briefingSortBtn('tema','Tema')}
+        ${briefingSortBtn('resp','Responsável')}
+        ${briefingSortBtn('deadline','Prazo')}
+      </div>
+      <div class="briefing-body">
+        <div class="briefing-section">
+          <div class="briefing-section-title">🔥 Urgente — Ação Imediata (${urgent.length})</div>
+          ${rows(urgent)}
+        </div>
+        <div class="briefing-section">
+          <div class="briefing-section-title">📅 Vencem Esta Semana (${week.length})</div>
+          ${rows(week)}
+        </div>
+        <div class="briefing-section">
+          <div class="briefing-section-title">🔄 Em Andamento (${wip.length})</div>
+          ${rows(wip.slice(0,10))}
+        </div>
+      </div>
+    </div>
+    <div class="briefing-card">
+      <div class="briefing-hd" style="background:var(--teal)">👥 Por Responsável</div>
+      <div class="briefing-body">
+        <div class="briefing-section">
+          <div class="briefing-section-title">Cappelini (${capp.length} ações pendentes)</div>
+          ${rows(capp.filter(a=>a.status==='urgente').concat(capp.filter(a=>a.status!=='urgente')).slice(0,8))}
+        </div>
+        <div class="briefing-section">
+          <div class="briefing-section-title">Heloiza (${helo.length} ações pendentes)</div>
+          ${rows(helo.slice(0,6))}
+        </div>
+      </div>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// REUNIÃO SEMANAL
+// ══════════════════════════════════════════════════════════════
+const meetSort = {}; // { [projId]: { col, dir } }
+
+function toggleMeetSort(projId, col) {
+  const cur = meetSort[projId] || { col: null, dir: 1 };
+  meetSort[projId] = (cur.col === col) ? { col, dir: cur.dir * -1 } : { col, dir: 1 };
+  renderMeeting();
+}
+
+function sortedMeetActions(projId, actions) {
+  const s = meetSort[projId];
+  if (!s || !s.col) return actions;
+  return [...actions].sort((a, b) => {
+    let va = '', vb = '';
+    if (s.col === 'tema')     { va = (a.tema||'').toLowerCase(); vb = (b.tema||'').toLowerCase(); }
+    if (s.col === 'resp')     { va = (a.resp||'').toLowerCase(); vb = (b.resp||'').toLowerCase(); }
+    if (s.col === 'deadline') { va = a.deadline||'9999'; vb = b.deadline||'9999'; }
+    if (va < vb) return -1 * s.dir;
+    if (va > vb) return  1 * s.dir;
+    return 0;
+  });
+}
+
+function meetSortIcon(projId, col) {
+  const s = meetSort[projId];
+  if (!s || s.col !== col) return '<span style="opacity:.3;margin-left:3px">⇅</span>';
+  return s.dir === 1
+    ? '<span style="margin-left:3px;color:var(--teal2)">↑</span>'
+    : '<span style="margin-left:3px;color:var(--teal2)">↓</span>';
+}
+
+function renderMeeting() {
+  // Load most recent log
+  const latestLog = (state.logs && state.logs.length > 0)
+    ? state.logs[0]
+    : (state.log || null);
+  if (latestLog) {
+    document.getElementById('log-decisoes').value = latestLog.decisoes || '';
+    document.getElementById('log-atencao').value  = latestLog.atencao  || '';
+    document.getElementById('log-obs').value      = latestLog.obs      || '';
+    if (latestLog.date)   document.getElementById('meet-date').value   = latestLog.date;
+    if (latestLog.sprint) document.getElementById('meet-sprint').value = latestLog.sprint;
+    if (latestLog.next)   document.getElementById('meet-next').value   = latestLog.next;
+  }
+  renderMeetingHistory();
+
+  const catOrder = ['Contrato','Produto','Marketing','Estratégico','Serviço'];
+  const sorted = [...state.projects].sort((a,b) => {
+    const si = {urgente:0,andamento:1,bloqueado:2,afazer:3,concluido:4};
+    return (si[a.status]||9) - (si[b.status]||9);
+  });
+
+  const catBg = {
+    Contrato:'#1B3A5C', Produto:'#2A9D8F', Marketing:'#7B3FA0',
+    'Estratégico':'#E8604C', 'Serviço':'#2E7D32'
+  };
+
+  document.getElementById('meeting-projects').innerHTML = sorted.map(p => {
+    const hd_bg = catBg[p.cat] || '#1B3A5C';
+    const urgCount = p.actions.filter(a=>a.status==='urgente').length;
+    const doneCount = p.actions.filter(a=>a.status==='concluido').length;
+    return `
+      <div class="meeting-section">
+        <div class="meeting-proj-hd" style="background:${hd_bg};cursor:pointer"
+             title="Abrir projeto"
+             onclick="goToProject('${p.id}')"
+             onmouseover="this.style.opacity='.85'"
+             onmouseout="this.style.opacity='1'">
+          ${p.name}
+          <span class="cat-tag">[${p.cat}]</span>
+          <span style="margin-left:auto;font-size:11px">${STATUS_LABEL[p.status]||p.status} · Resp: ${p.resp}</span>
+          ${urgCount ? `<span style="background:rgba(0,0,0,.25);padding:2px 8px;border-radius:10px;font-size:10px;margin-left:6px">${urgCount} urgente</span>` : ''}
+          <span style="font-size:11px;opacity:.7;margin-left:8px">↗</span>
+        </div>
+        <table class="meeting-actions-tbl">
+          <thead><tr>
+            <th style="width:40%;cursor:pointer;user-select:none" onclick="toggleMeetSort('${p.id}','tema')">Ação / Entrega${meetSortIcon(p.id,'tema')}</th>
+            <th>Status</th>
+            <th style="cursor:pointer;user-select:none;white-space:nowrap" onclick="toggleMeetSort('${p.id}','resp')">Responsável${meetSortIcon(p.id,'resp')}</th>
+            <th style="cursor:pointer;user-select:none;white-space:nowrap" onclick="toggleMeetSort('${p.id}','deadline')">Prazo${meetSortIcon(p.id,'deadline')}</th>
+            <th>Observação</th>
+          </tr></thead>
+          <tbody>
+          ${(() => {
+            const actions = sortedMeetActions(p.id, p.actions);
+            const rowFn = a => `
+              <tr class="${a.status==='concluido'?'done-row':''}"
+                  style="cursor:pointer" title="Editar ação"
+                  onclick="goToAction('${p.id}','${a.id}')"
+                  onmouseover="this.style.background='var(--surface3)'"
+                  onmouseout="this.style.background=''">
+                <td>
+                  ${a.tema ? `<span style="font-size:10px;font-weight:700;background:var(--lamber);color:var(--amber2);border:1px solid rgba(233,196,106,.25);padding:1px 7px;border-radius:10px;margin-right:5px">${a.tema}</span>` : ''}
+                  ${a.text}
+                </td>
+                <td><span class="status-badge s-${a.status}">${STATUS_LABEL[a.status]||a.status}</span></td>
+                <td>${a.resp}</td>
+                <td class="${deadClass(a.deadline)}">${fmtDate(a.deadline)}</td>
+                <td style="color:var(--text3);font-style:italic;font-size:11px">${a.notes}</td>
+              </tr>`;
+            const s = meetSort[p.id];
+            return (s && s.col) ? actions.map(rowFn).join('') : temaGroupRows(p.actions, rowFn);
+          })()}
+          </tbody>
+        </table>
+        ${p.notes ? `<div style="padding:8px 12px;font-size:11px;color:var(--gray4);font-style:italic;border-top:1px solid var(--gray2)">📝 ${p.notes}</div>` : ''}
+      </div>`;
+  }).join('');
+}
+
+function saveLog() {
+  const meetDate = document.getElementById('meet-date').value || new Date().toISOString().slice(0,10);
+  const sprint    = document.getElementById('meet-sprint').value || '';
+  const next      = document.getElementById('meet-next').value || '';
+  const entry = {
+    date:     meetDate,
+    sprint:   sprint,
+    next:     next,
+    decisoes: document.getElementById('log-decisoes').value,
+    atencao:  document.getElementById('log-atencao').value,
+    obs:      document.getElementById('log-obs').value,
+    savedAt:  new Date().toISOString(),
+  };
+  if (!state.logs) state.logs = [];
+  // Upsert by date
+  const idx = state.logs.findIndex(l => l.date === meetDate);
+  if (idx >= 0) state.logs[idx] = entry;
+  else state.logs.unshift(entry);
+  // Keep max 52 entries
+  if (state.logs.length > 52) state.logs = state.logs.slice(0, 52);
+  // Compat: keep state.log pointing to latest
+  state.log = entry;
+  saveState();
+  const btn = document.querySelector('.btn-save-log');
+  btn.textContent = 'Salvo ✓';
+  setTimeout(() => btn.textContent = 'Salvar Registro', 2000);
+  renderMeetingHistory();
+}
+
+
+// ══════════════════════════════════════════════════════════════
+// HISTÓRICO DE REUNIÕES
+// ══════════════════════════════════════════════════════════════
+function renderMeetingHistory() {
+  const el = document.getElementById('meeting-history');
+  if (!el) return;
+  const logs = state.logs || (state.log ? [state.log] : []);
+  if (logs.length === 0) { el.innerHTML = ''; return; }
+
+  const fmtBR = iso => {
+    if (!iso) return '—';
+    const [y,m,d] = iso.split('-');
+    return `${d}/${m}/${y}`;
+  };
+
+  el.innerHTML = `
+    <div class="meeting-log" style="margin-top:24px">
+      <div class="meeting-log-hd" style="display:flex;align-items:center;justify-content:space-between">
+        📚 Histórico de Reuniões
+        <span style="font-size:11px;color:var(--text3);font-weight:400">${logs.length} registro${logs.length>1?'s':''}</span>
+      </div>
+      <div style="padding:0">
+        ${logs.map((l, i) => `
+          <div style="border-bottom:1px solid var(--border)">
+            <button onclick="toggleHistEntry(${i})"
+              style="width:100%;text-align:left;padding:12px 16px;background:none;border:none;
+                     cursor:pointer;font-family:var(--font);display:flex;align-items:center;gap:12px;
+                     color:var(--text2);transition:.12s"
+              onmouseover="this.style.background='var(--surface2)'"
+              onmouseout="this.style.background='none'">
+              <span style="font-size:14px;font-weight:700;color:var(--text)">
+                📅 ${fmtBR(l.date)}
+              </span>
+              ${l.sprint ? `<span style="font-size:11px;background:var(--lnavy);color:var(--navy2);padding:2px 8px;border-radius:10px;font-weight:600">Sprint ${l.sprint}</span>` : ''}
+              ${l.next ? `<span style="font-size:11px;color:var(--text3)">Próxima: ${fmtBR(l.next)}</span>` : ''}
+              <span style="margin-left:auto;font-size:16px;color:var(--text3)" id="hist-chevron-${i}">›</span>
+            </button>
+            <div id="hist-entry-${i}" style="display:none;padding:4px 16px 16px;display:none">
+              ${l.decisoes ? `
+                <div style="margin-bottom:12px">
+                  <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--teal2);margin-bottom:5px">✅ Decisões tomadas</div>
+                  <div style="font-size:13px;color:var(--text2);line-height:1.6;white-space:pre-wrap">${l.decisoes}</div>
+                </div>` : ''}
+              ${l.atencao ? `
+                <div style="margin-bottom:12px">
+                  <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--amber2);margin-bottom:5px">⚠️ Pontos de atenção</div>
+                  <div style="font-size:13px;color:var(--text2);line-height:1.6;white-space:pre-wrap">${l.atencao}</div>
+                </div>` : ''}
+              ${l.obs ? `
+                <div>
+                  <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:5px">📝 Observações</div>
+                  <div style="font-size:13px;color:var(--text2);line-height:1.6;white-space:pre-wrap">${l.obs}</div>
+                </div>` : ''}
+              <div style="margin-top:10px">
+                <button onclick="loadHistEntry(${i})"
+                  style="background:var(--surface3);border:1px solid var(--border2);color:var(--text2);
+                         padding:5px 12px;border-radius:var(--rs);font-size:11px;cursor:pointer;
+                         font-family:var(--font);margin-right:6px">
+                  ↩ Carregar nos campos
+                </button>
+                <button onclick="deleteHistEntry(${i})"
+                  style="background:none;border:1px solid rgba(232,96,76,.3);color:var(--coral2);
+                         padding:5px 12px;border-radius:var(--rs);font-size:11px;cursor:pointer;font-family:var(--font)">
+                  🗑 Excluir
+                </button>
+              </div>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+function toggleHistEntry(i) {
+  const el = document.getElementById(`hist-entry-${i}`);
+  const ch = document.getElementById(`hist-chevron-${i}`);
+  const open = el.style.display !== 'none';
+  el.style.display = open ? 'none' : 'block';
+  ch.textContent = open ? '›' : '⌄';
+}
+
+function loadHistEntry(i) {
+  const l = (state.logs || [])[i];
+  if (!l) return;
+  document.getElementById('log-decisoes').value = l.decisoes || '';
+  document.getElementById('log-atencao').value  = l.atencao  || '';
+  document.getElementById('log-obs').value      = l.obs      || '';
+  if (l.date)   document.getElementById('meet-date').value   = l.date;
+  if (l.sprint) document.getElementById('meet-sprint').value = l.sprint;
+  if (l.next)   document.getElementById('meet-next').value   = l.next;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function deleteHistEntry(i) {
+  if (!confirm('Excluir este registro de reunião?')) return;
+  state.logs.splice(i, 1);
+  saveState();
+  renderMeetingHistory();
+}
+
+
+// ── GROUP BY TEMA ──────────────────────────────────────────────────────────
+function groupByTema(actions) {
+  const map = {};
+  actions.forEach(a => {
+    const key = a.tema || '—';
+    if (!map[key]) map[key] = [];
+    map[key].push(a);
+  });
+  // Sort: named temas first (alpha), then '—'
+  return Object.entries(map).sort(([a],[b]) => {
+    if (a === '—') return 1;
+    if (b === '—') return -1;
+    return a.localeCompare(b, 'pt-BR');
+  });
+}
+
+function temaGroupRows(actions, rowFn) {
+  const groups = groupByTema(actions);
+  if (groups.length === 1 && groups[0][0] === '—') {
+    // No temas — render flat
+    return actions.map(rowFn).join('');
+  }
+  return groups.map(([tema, acts]) => `
+    <tr>
+      <td colspan="6" style="padding:10px 12px 4px;background:var(--surface2);
+        font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;
+        color:var(--amber2);border-bottom:1px solid var(--border)">
+        ${tema === '—' ? '📋 Sem tema' : `🏷 ${tema}`}
+        <span style="color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0;margin-left:6px">${acts.length} ação${acts.length>1?'ões':''}</span>
+      </td>
+    </tr>
+    ${acts.map(rowFn).join('')}
+  `).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+// MODAL PROJETO
+// ══════════════════════════════════════════════════════════════
+function openProjModal(id) {
+  const modal = document.getElementById('modal-proj');
+  const delBtn = document.getElementById('mpj-del-btn');
+  if (id) {
+    const p = state.projects.find(x => x.id === id);
+    document.getElementById('mpj-title').textContent = 'Editar Projeto';
+    document.getElementById('mpj-id').value = id;
+    document.getElementById('mpj-name').value = p.name;
+    document.getElementById('mpj-cat').value = p.cat;
+    document.getElementById('mpj-status').value = p.status;
+    document.getElementById('mpj-resp').value = p.resp;
+    document.getElementById('mpj-phase').value = p.phase;
+    document.getElementById('mpj-notes').value = p.notes;
+    delBtn.style.display = 'block';
+  } else {
+    document.getElementById('mpj-title').textContent = 'Novo Projeto';
+    document.getElementById('mpj-id').value = '';
+    document.getElementById('mpj-name').value = '';
+    document.getElementById('mpj-cat').value = 'Contrato';
+    document.getElementById('mpj-status').value = 'andamento';
+    document.getElementById('mpj-resp').value = 'Cappelini';
+    document.getElementById('mpj-phase').value = '';
+    document.getElementById('mpj-notes').value = '';
+    delBtn.style.display = 'none';
+  }
+  modal.classList.add('open');
+}
+
+function saveProject() {
+  const id = document.getElementById('mpj-id').value;
+  const data = {
+    name: document.getElementById('mpj-name').value.trim(),
+    cat: document.getElementById('mpj-cat').value,
+    status: document.getElementById('mpj-status').value,
+    resp: document.getElementById('mpj-resp').value.trim(),
+    phase: document.getElementById('mpj-phase').value.trim(),
+    notes: document.getElementById('mpj-notes').value.trim(),
+  };
+  if (!data.name) return;
+  if (id) {
+    const p = state.projects.find(x => x.id === id);
+    Object.assign(p, data);
+  } else {
+    state.projects.push({ id: uid(), actions: [], ...data });
+  }
+  saveState();
+  closeModal('modal-proj');
+  renderProjectList();
+  renderDashboard();
+}
+
+function deleteProject() {
+  const id = document.getElementById('mpj-id').value;
+  if (!confirm('Excluir este projeto e todas as suas ações?')) return;
+  state.projects = state.projects.filter(x => x.id !== id);
+  currentProj = null;
+  saveState();
+  closeModal('modal-proj');
+  document.getElementById('proj-detail').innerHTML = '<div class="no-proj">← Selecione um projeto</div>';
+  renderProjectList();
+}
+
+// ══════════════════════════════════════════════════════════════
+// MODAL AÇÃO
+// ══════════════════════════════════════════════════════════════
+function openActionModal(projId, actionId) {
+  const delBtn = document.getElementById('mac-del-btn');
+  document.getElementById('mac-proj-id').value = projId;
+  if (actionId) {
+    const p = state.projects.find(x => x.id === projId);
+    const a = p.actions.find(x => x.id === actionId);
+    document.getElementById('mac-title').textContent = 'Editar Ação';
+    document.getElementById('mac-action-id').value = actionId;
+    document.getElementById('mac-text').value = a.text;
+    document.getElementById('mac-status').value = a.status;
+    document.getElementById('mac-resp').value = a.resp;
+    document.getElementById('mac-deadline').value = a.deadline || '';
+    document.getElementById('mac-notes').value = a.notes || '';
+    document.getElementById('mac-tema').value = a.tema || '';
+    delBtn.style.display = 'block';
+  } else {
+    document.getElementById('mac-title').textContent = 'Nova Ação';
+    document.getElementById('mac-action-id').value = '';
+    document.getElementById('mac-text').value = '';
+    document.getElementById('mac-status').value = 'afazer';
+    document.getElementById('mac-resp').value = 'Cappelini';
+    document.getElementById('mac-deadline').value = '';
+    document.getElementById('mac-notes').value = '';
+    document.getElementById('mac-tema').value = '';
+    delBtn.style.display = 'none';
+  }
+  // Populate datalist with existing temas from this project
+  const projForTema = state.projects.find(x => x.id === projId);
+  const existingTemas = [...new Set((projForTema?.actions || []).map(a => a.tema).filter(Boolean))];
+  const dl = document.getElementById('mac-tema-list');
+  dl.innerHTML = existingTemas.map(t => `<option value="${t}">`).join('');
+  document.getElementById('modal-action').classList.add('open');
+}
+
+function saveAction() {
+  const projId = document.getElementById('mac-proj-id').value;
+  const actionId = document.getElementById('mac-action-id').value;
+  const p = state.projects.find(x => x.id === projId);
+  const data = {
+    text: document.getElementById('mac-text').value.trim(),
+    status: document.getElementById('mac-status').value,
+    resp: document.getElementById('mac-resp').value,
+    deadline: document.getElementById('mac-deadline').value,
+    notes: document.getElementById('mac-notes').value.trim(),
+    tema: document.getElementById('mac-tema').value.trim(),
+  };
+  if (!data.text) return;
+
+  if (actionId) {
+    const a = p.actions.find(x => x.id === actionId);
+    const oldStatus   = a.status;
+    const oldDeadline = a.deadline;
+    const oldNotes    = a.notes;
+    Object.assign(a, data);
+    // Log mudanças
+    if (data.status !== oldStatus)
+      logActivity(projId, p.name, data.text, 'status', `${STATUS_LABEL[oldStatus]||oldStatus} → ${STATUS_LABEL[data.status]||data.status}`);
+    else if (data.deadline !== oldDeadline)
+      logActivity(projId, p.name, data.text, 'prazo', `${fmtDate(oldDeadline)||'—'} → ${fmtDate(data.deadline)||'—'}`);
+    else if (data.notes !== oldNotes)
+      logActivity(projId, p.name, data.text, 'notas', '');
+    else
+      logActivity(projId, p.name, data.text, 'status', '');
+    // @menções
+    checkAndSendMentions(p.name, data.text, oldNotes, data.notes);
+  } else {
+    p.actions.push({ id: uid(), ...data });
+    logActivity(projId, p.name, data.text, 'nova_acao', `Resp: ${data.resp}`);
+    checkAndSendMentions(p.name, data.text, '', data.notes);
+  }
+
+  if (p.actions.some(a => a.status === 'urgente')) p.status = 'urgente';
+  else if (p.actions.every(a => a.status === 'concluido')) p.status = 'concluido';
+  else p.status = 'andamento';
+
+  saveState();
+  closeModal('modal-action');
+  renderDetail(projId);
+  renderProjectList();
+}
+
+function deleteAction() {
+  const projId = document.getElementById('mac-proj-id').value;
+  const actionId = document.getElementById('mac-action-id').value;
+  if (!confirm('Excluir esta ação?')) return;
+  const p = state.projects.find(x => x.id === projId);
+  const a = p.actions.find(x => x.id === actionId);
+  const actionText = a ? a.text : '';
+  p.actions = p.actions.filter(x => x.id !== actionId);
+  logActivity(projId, p.name, actionText, 'excluido', '');
+  saveState();
+  closeModal('modal-action');
+  renderDetail(projId);
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// Close modal on backdrop click
+document.querySelectorAll('.modal-backdrop').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+});
+
+// ══════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════
+// ── CLAUDE SYNC ──────────────────────────────────────────────────────────────
+function showToast(msg, duration = 5000) {
+  const t = document.getElementById('toast-msg');
+  t.innerHTML = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+function saveAndSendToClaude() {
+  // 1. Salva a ação normalmente
+  const projId = document.getElementById('mac-proj-id').value;
+  const actionId = document.getElementById('mac-action-id').value;
+  const p = state.projects.find(x => x.id === projId);
+  const data = {
+    text:     document.getElementById('mac-text').value.trim(),
+    status:   document.getElementById('mac-status').value,
+    resp:     document.getElementById('mac-resp').value,
+    deadline: document.getElementById('mac-deadline').value,
+    notes:    document.getElementById('mac-notes').value.trim(),
+    tema:     document.getElementById('mac-tema').value.trim(),
+  };
+  if (!data.text) return;
+
+  let isNew = !actionId;
+  if (actionId) {
+    const a = p.actions.find(x => x.id === actionId);
+    Object.assign(a, data);
+  } else {
+    p.actions.push({ id: uid(), ...data });
+  }
+  if (p.actions.some(a => a.status === 'urgente')) p.status = 'urgente';
+  else if (p.actions.every(a => a.status === 'concluido')) p.status = 'concluido';
+  else p.status = 'andamento';
+  saveState();
+  closeModal('modal-action');
+  renderDetail(projId);
+  renderProjectList();
+
+  // 2. Monta mensagem para o Claude
+  const statusLabel = { urgente:'Urgente', andamento:'Em Andamento', afazer:'A Fazer', concluido:'Concluído', bloqueado:'Bloqueado' };
+  const deadStr = data.deadline ? fmtDate(data.deadline) : 'sem prazo';
+  const obsStr = data.notes || '(nenhuma)';
+  const op = isNew ? 'NOVA AÇÃO criada' : 'AÇÃO ATUALIZADA';
+
+  const temaStr = data.tema || '—';
+  const msg = `📋 ${op} na ferramenta Gestão de Projetos Girus\n\n` +
+    `Projeto: ${p.name} [${p.cat}]\n` +
+    `Tema: ${temaStr}\n` +
+    `Ação: ${data.text}\n` +
+    `Status: ${statusLabel[data.status]}\n` +
+    `Responsável: ${data.resp}\n` +
+    `Prazo: ${deadStr}\n` +
+    `Observação: ${obsStr}\n\n` +
+    `Por favor, verifique se há documentos no projeto que precisam ser atualizados com esta informação (CLAUDE.md, propostas, planilhas, relatórios). Se sim, atualize-os agora.`;
+
+  // 3. Copia para clipboard
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(msg).then(() => {
+      showToast(`<strong>✓ Copiado!</strong> Cole no chat do Claude para atualizar os documentos do projeto <em>${p.name}</em>.`, 6000);
+    }).catch(() => {
+      showToast(`<strong>Mensagem gerada:</strong><br><small>${msg.substring(0,120)}...</small>`, 8000);
+    });
+  } else {
+    // Fallback: exibir no toast
+    showToast(`<strong>Mensagem para o Claude:</strong><br><small>${msg.substring(0,200)}...</small>`, 10000);
+  }
+}
+
+
+
+
+function renderGuia() {
+  const el = document.getElementById('guide-content');
+  el.innerHTML = `
+    <div class="guide-intro">
+      <div class="guide-intro-icon">🗂</div>
+      <div class="guide-intro-text">
+        <h2>Girus Projetos — Ferramenta de Gestão</h2>
+        <p>Substitui o Trello como sistema central de acompanhamento da Girus. Funciona 100% offline no navegador e salva os dados automaticamente no dispositivo. Nenhum login, nenhuma nuvem — tudo local e instantâneo.</p>
+        <div class="guide-intro-badges">
+          <span class="badge badge-teal">💾 Salvo automaticamente</span>
+          <span class="badge badge-coral">📵 100% offline</span>
+          <span class="badge badge-amber">🤖 Integração Claude</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="guide-section">
+      <div class="guide-section-title">🗺 Estrutura — As 5 Abas</div>
+      <div class="tab-guide-grid">
+        <div class="tab-guide-card">
+          <div class="tab-guide-icon">📊</div>
+          <div class="tab-guide-name">Dashboard</div>
+          <div class="tab-guide-desc">KPIs, urgências, projetos em andamento e entregas recentes</div>
+        </div>
+        <div class="tab-guide-card">
+          <div class="tab-guide-icon">📂</div>
+          <div class="tab-guide-name">Projetos</div>
+          <div class="tab-guide-desc">Gerenciamento detalhado de ações por projeto — 3 modos de visualização</div>
+        </div>
+        <div class="tab-guide-card">
+          <div class="tab-guide-icon">⚡</div>
+          <div class="tab-guide-name">Briefing do Dia</div>
+          <div class="tab-guide-desc">Resumo gerado automaticamente para começar o dia focado</div>
+        </div>
+        <div class="tab-guide-card">
+          <div class="tab-guide-icon">📅</div>
+          <div class="tab-guide-name">Reunião Semanal</div>
+          <div class="tab-guide-desc">Revisão de todos os projetos + registro e histórico de decisões por data</div>
+        </div>
+        <div class="tab-guide-card">
+          <div class="tab-guide-icon">📖</div>
+          <div class="tab-guide-name">Guia de Uso</div>
+          <div class="tab-guide-desc">Esta página — documentação completa da ferramenta para a equipe</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="guide-section">
+      <div class="guide-section-title">📂 Como Usar — Projetos</div>
+      <div class="guide-card">
+        <div class="guide-card-hd">📋 Gerenciando Projetos e Ações</div>
+        <div class="guide-card-body">
+          <div class="steps">
+            <div class="step">
+              <div class="step-num">1</div>
+              <div class="step-content">
+                <div class="step-title">Selecione um projeto</div>
+                <div class="step-desc">Clique em qualquer projeto na coluna da esquerda. Os projetos estão agrupados por categoria (Contrato, Produto, Marketing, Estratégico, Serviço). O ponto colorido indica o status geral.</div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">2</div>
+              <div class="step-content">
+                <div class="step-title">Escolha o modo de visualização</div>
+                <div class="step-desc">No painel de ações, escolha entre:<br>
+                  <code>≡ Lista</code> — tabela completa para edição rápida<br>
+                  <code>□ Kanban</code> — colunas por status para ver o fluxo<br>
+                  <code>— Timeline</code> — agrupado por prazo para identificar urgências</div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">3</div>
+              <div class="step-content">
+                <div class="step-title">Adicione ou edite ações</div>
+                <div class="step-desc">Clique em <code>+ Nova Ação</code> para criar. Para editar, clique em ✏ na visão Lista ou no card no Kanban/Timeline. O campo <code>Observação</code> registra decisões e contexto — é o histórico da ação.</div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">4</div>
+              <div class="step-content">
+                <div class="step-title">Marque como concluído</div>
+                <div class="step-desc">Clique no botão <code>✓</code> ao lado da ação. Ela fica visível, riscada e com opacidade reduzida. Use <code>↩</code> para desfazer.</div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">5</div>
+              <div class="step-content">
+                <div class="step-title">Crie ou edite projetos</div>
+                <div class="step-desc">Clique em <code>+ Novo</code> na barra de projetos para criar. Para editar, use o botão <code>✏ Editar</code> no painel de detalhes. Exclusão disponível dentro do modal de edição.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="guide-section">
+      <div class="guide-section-title">🔖 Status das Ações — Quando usar cada um</div>
+      <div class="guide-card">
+        <div class="guide-card-body">
+          <div class="status-guide">
+            <div class="status-item">
+              <div>
+                <span class="status-badge s-urgente">Urgente</span>
+                <div class="status-item-desc" style="margin-top:6px">Atenção <strong>imediata</strong>. Aparece em destaque no Dashboard e Briefing. Use para prazos em menos de 48h ou bloqueios críticos.</div>
+              </div>
+            </div>
+            <div class="status-item">
+              <div>
+                <span class="status-badge s-andamento">Em Andamento</span>
+                <div class="status-item-desc" style="margin-top:6px">Ação <strong>em progresso</strong>. O responsável está trabalhando ativamente. Status padrão para trabalho corrente.</div>
+              </div>
+            </div>
+            <div class="status-item">
+              <div>
+                <span class="status-badge s-afazer">A Fazer</span>
+                <div class="status-item-desc" style="margin-top:6px">Planejado mas <strong>não iniciado</strong>. Use para backlog — ações futuras que ainda não são prioridade.</div>
+              </div>
+            </div>
+            <div class="status-item">
+              <div>
+                <span class="status-badge s-bloqueado">Bloqueado</span>
+                <div class="status-item-desc" style="margin-top:6px">Impedido por <strong>fator externo</strong>. Registre na Observação o motivo e quem precisa agir para desbloquear.</div>
+              </div>
+            </div>
+            <div class="status-item">
+              <div>
+                <span class="status-badge s-concluido">Concluído</span>
+                <div class="status-item-desc" style="margin-top:6px">Entrega <strong>finalizada</strong>. A ação fica visível riscada. Aparece em "Concluídas Recentemente" no Dashboard.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="guide-section">
+      <div class="guide-section-title">📅 Reunião Semanal — Como funciona</div>
+      <div class="guide-card">
+        <div class="guide-card-hd">📅 Registro e Histórico de Reuniões</div>
+        <div class="guide-card-body">
+          <div class="steps">
+            <div class="step">
+              <div class="step-num">1</div>
+              <div class="step-content">
+                <div class="step-title">Projetos exibidos automaticamente</div>
+                <div class="step-desc">A seção inferior exibe <strong>todos os projetos</strong> com suas ações — ordenados por urgência (urgentes primeiro). Os dados vêm diretamente do que foi cadastrado na aba Projetos. Não há configuração separada.</div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">2</div>
+              <div class="step-content">
+                <div class="step-title">Preencha o Registro da Reunião</div>
+                <div class="step-desc">No topo, configure a data, sprint e próxima reunião. Preencha os 3 campos: <strong>Decisões tomadas</strong>, <strong>Pontos de atenção</strong> e <strong>Observações gerais</strong>.</div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">3</div>
+              <div class="step-content">
+                <div class="step-title">Clique em "Salvar Registro"</div>
+                <div class="step-desc">A reunião é salva com data, sprint e conteúdo. Se você salvar novamente na <strong>mesma data</strong>, o registro é atualizado (não duplicado). A ferramenta guarda até <strong>52 semanas</strong> de histórico.</div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">4</div>
+              <div class="step-content">
+                <div class="step-title">Consulte o Histórico</div>
+                <div class="step-desc">O <strong>📚 Histórico de Reuniões</strong> aparece abaixo dos projetos como lista acordeão. Clique em qualquer data para expandir e ler as decisões registradas. Use <code>↩ Carregar nos campos</code> para editar uma reunião anterior.</div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">5</div>
+              <div class="step-content">
+                <div class="step-title">Imprima a ata</div>
+                <div class="step-desc">Use o botão <code>🖨 Imprimir</code> para gerar uma ata em PDF ou papel com todos os projetos e ações do momento.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="guide-section">
+      <div class="guide-section-title">🤖 Sincronização com o Claude</div>
+      <div class="guide-card">
+        <div class="guide-card-hd">🤖 Como usar "Salvar + Claude"</div>
+        <div class="guide-card-body">
+          <div class="steps">
+            <div class="step">
+              <div class="step-num">1</div>
+              <div class="step-content">
+                <div class="step-title">Abra ou crie uma ação</div>
+                <div class="step-desc">Clique em <code>+ Nova Ação</code> ou <code>✏</code> para editar. Preencha os campos normalmente.</div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">2</div>
+              <div class="step-content">
+                <div class="step-title">Descreva o contexto no campo Observação</div>
+                <div class="step-desc">Este campo é a chave. Escreva o que foi definido, decidido ou descoberto. Ex: <em>"Aprovado valor R$399/mês, 10 usuários, renovação anual. Cliente solicita proposta formal até 20/06."</em></div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">3</div>
+              <div class="step-content">
+                <div class="step-title">Clique em "🤖 Salvar + Claude"</div>
+                <div class="step-desc">A ação é salva e uma mensagem formatada é copiada para a área de transferência. Um toast de confirmação aparece na tela.</div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">4</div>
+              <div class="step-content">
+                <div class="step-title">Cole no chat do Claude e envie</div>
+                <div class="step-desc">Abra o chat do Claude e cole (<code>Ctrl+V</code> / <code>Cmd+V</code>). O Claude recebe o contexto completo do projeto e da ação, e atualiza os documentos relacionados automaticamente.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="guide-section">
+      <div class="guide-section-title">⚡ Briefing do Dia — Como usar</div>
+      <div class="guide-card">
+        <div class="guide-card-body">
+          <div class="steps">
+            <div class="step">
+              <div class="step-num">1</div>
+              <div class="step-content">
+                <div class="step-title">Acesse toda manhã antes de começar</div>
+                <div class="step-desc">Clique em <code>⚡ Briefing do Dia</code> na barra lateral. Clique em "↻ Atualizar Briefing" para gerar o resumo com base nos dados mais recentes.</div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">2</div>
+              <div class="step-content">
+                <div class="step-title">Leia as seções em ordem de prioridade</div>
+                <div class="step-desc"><strong>🔥 Urgente</strong> → resolva primeiro. <strong>📅 Esta Semana</strong> → planeje o dia. <strong>🔄 Em Andamento</strong> → acompanhe o progresso. <strong>👥 Por Responsável</strong> → veja o que cada um tem pendente.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="guide-section">
+      <div class="guide-section-title">💡 Boas Práticas</div>
+      <div class="tips-list">
+        <div class="tip-item"><span class="tip-icon">🔄</span><span>Atualize o status das ações <strong>assim que algo muda</strong> — não acumule para o final do dia.</span></div>
+        <div class="tip-item"><span class="tip-icon">✅</span><span>Marque como <strong>Concluído imediatamente</strong> após entregar. Mantém o Dashboard limpo e motivador.</span></div>
+        <div class="tip-item"><span class="tip-icon">📝</span><span>Preencha a <strong>Observação</strong> sempre que houver uma decisão importante — é o histórico permanente da ação.</span></div>
+        <div class="tip-item"><span class="tip-icon">🤖</span><span>Use <strong>"Salvar + Claude"</strong> sempre que precisar atualizar documentos de cliente na pasta do projeto.</span></div>
+        <div class="tip-item"><span class="tip-icon">☀️</span><span>Comece o dia sempre pela aba <strong>Briefing do Dia</strong> para saber exatamente o que focar.</span></div>
+        <div class="tip-item"><span class="tip-icon">📅</span><span>Salve o <strong>Registro da Reunião</strong> antes de fechar — o histórico fica disponível para consulta a qualquer momento.</span></div>
+        <div class="tip-item"><span class="tip-icon">📂</span><span>Use o modo <strong>Timeline</strong> toda segunda para ver o que vence esta semana antes de planejar o dia.</span></div>
+        <div class="tip-item"><span class="tip-icon">🚫</span><span>Ações <strong>Bloqueadas</strong>: sempre preencha a Observação com o motivo e quem precisa agir para desbloquear.</span></div>
+      </div>
+    </div>
+
+    <div style="padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);text-align:center;color:var(--text3);font-size:12px;margin-top:8px">
+      Girus Projetos v1.3 · Dados salvos localmente no navegador · Histórico de reuniões · Atualizado em junho 2026
+    </div>
+  `;
+}
+
+
+// ── EXPORTAR PARA CLAUDE ──
+function exportarParaClaude() {
+  const s = state;
+  const now = new Date().toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'});
+  const statusLabel = { urgente:'🔥 Urgente', andamento:'🔄 Em Andamento', afazer:'📋 A Fazer', concluido:'✅ Concluído', bloqueado:'🚫 Bloqueado' };
+  const catIcon = { Contrato:'🤝', Produto:'💻', Marketing:'📣', Estratégico:'🎯', Serviço:'⚙️' };
+
+  let md = `# Status dos Projetos Girus\n*Exportado em: ${now}*\n\n`;
+
+  // Group by status priority: urgente first, then andamento, then afazer
+  const order = ['urgente','andamento','afazer','bloqueado','concluido'];
+  const groups = {};
+  order.forEach(k => groups[k] = []);
+  s.projects.forEach(p => { if (groups[p.status]) groups[p.status].push(p); });
+
+  order.forEach(status => {
+    const projs = groups[status];
+    if (!projs.length) return;
+    md += `## ${statusLabel[status] || status}\n\n`;
+    projs.forEach(p => {
+      const icon = catIcon[p.cat] || '📁';
+      md += `### ${icon} ${p.name} *(${p.cat})*\n`;
+      md += `- **Fase:** ${p.phase || '—'}\n`;
+      if (p.notes) md += `- **Contexto:** ${p.notes}\n`;
+      if (p.resp) md += `- **Responsável:** ${p.resp}\n`;
+      // Pending/in-progress actions
+      const activeActions = (p.actions || []).filter(a => a.status !== 'concluido');
+      if (activeActions.length) {
+        md += `- **Ações pendentes:**\n`;
+        activeActions.forEach(a => {
+          const prazo = a.deadline ? ` *(prazo: ${a.deadline})*` : '';
+          const obs = a.notes ? ` — ${a.notes}` : '';
+          md += `  - [${a.status}] ${a.text}${prazo}${obs}\n`;
+        });
+      }
+      md += '\n';
+    });
+  });
+
+  md += `---\n*Arquivo gerado automaticamente por gestao-projetos-girus.html*\n*Salve como: Marketing_Girus/projetos-status.md*\n`;
+
+  // Download the file
+  const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'projetos-status.md';
+  a.click();
+  URL.revokeObjectURL(url);
+
+  // Visual feedback
+  const btn = [...document.querySelectorAll('.nav-item')].find(b => b.textContent.includes('Exportar'));
+  if (btn) {
+    const orig = btn.querySelector('.nav-label').textContent;
+    btn.querySelector('.nav-label').textContent = 'Exportado ✓';
+    setTimeout(() => btn.querySelector('.nav-label').textContent = orig, 2000);
+  }
+}
+
+// ── INIT ASSÍNCRONO ──
+async function initApp(user) {
+  _currentUserEmail = user.email || '';
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('sidebar-user').textContent = '👤 ' + _currentUserEmail;
+  document.getElementById('hdate').textContent = new Date().toLocaleDateString('pt-BR',{weekday:'short',day:'numeric',month:'short'});
+  state = await loadState();
+  renderDashboard();
+  renderGuia();
+  setupRealtime();
+  // Carrega badge de notificações ao iniciar
+  loadNotifications();
+}
+
+// Ouve mudanças de auth (login / logout / reload)
+supa.auth.onAuthStateChange(async (event, session) => {
+  if (session?.user) {
+    await initApp(session.user);
+  } else {
+    document.getElementById('login-screen').style.display = 'flex';
+  }
+});
+</script>
+</body>
+</html>
