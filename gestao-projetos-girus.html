@@ -1317,7 +1317,8 @@ body {
     <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
       <div id="sidebar-user" style="font-size:10px;color:var(--text3);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
       <button onclick="doLogout()" style="width:100%;padding:5px 8px;background:none;border:1px solid var(--border2);border-radius:var(--rs);color:var(--text3);font-size:11px;cursor:pointer;font-family:var(--font);text-align:left" onmouseover="this.style.color='var(--coral2)'" onmouseout="this.style.color='var(--text3)'">⎋ Sair</button>
-      <div style="font-size:9px;color:var(--text3);opacity:0.5;margin-top:4px;text-align:right">v2.4 · 16/06</div>
+      <div style="font-size:9px;color:var(--text3);opacity:0.5;margin-top:4px;text-align:right">v2.5 · 16/06</div>
+      <div id="data-ts" style="font-size:9px;color:var(--text3);opacity:0.6;margin-top:2px;text-align:right"></div>
     </div>
   </div>
 </aside>
@@ -1632,14 +1633,9 @@ document.getElementById('login-pass').addEventListener('keydown', e => {
 });
 
 async function doLogout() {
-  try {
-    await supa.auth.signOut();
-  } catch(e) { console.warn('signOut erro:', e); }
-  _currentUserEmail = '';
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('sidebar-user').textContent = '';
-  // Cancela timer pendente para não salvar estado após logout
   if (_saveTimer) { clearTimeout(_saveTimer); _saveTimer = null; }
+  try { await supa.auth.signOut(); } catch(e) { console.warn('signOut erro:', e); }
+  window.location.reload();
 }
 
 async function loadState() {
@@ -1654,7 +1650,7 @@ async function loadState() {
     console.warn('loadState erro inicial:', error.message);
     const { error: refreshErr } = await supa.auth.refreshSession();
     if (!refreshErr) {
-      const res = await supa.from('girus_state').select('data').eq('id','singleton').single();
+      const res = await supa.from('girus_state').select('data,updated_at').eq('id','singleton').single();
       data  = res.data;
       error = res.error;
     }
@@ -1672,8 +1668,16 @@ async function loadState() {
     const ids = new Set(s.projects.map(p => p.id));
     const toAdd = INITIAL_DATA.projects.filter(p => !ids.has(p.id));
     if (toAdd.length) { s.projects.push(...toAdd); }
+    // Mostra timestamp real do dado
+    const tsEl = document.getElementById('data-ts');
+    if (tsEl && data.updated_at) {
+      const d = new Date(data.updated_at);
+      tsEl.textContent = '🟢 DB ' + d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    }
     return s;
   }
+  const tsEl = document.getElementById('data-ts');
+  if (tsEl) tsEl.textContent = '🔴 LOCAL (sem Supabase)';
   return JSON.parse(JSON.stringify(INITIAL_DATA));
 }
 
