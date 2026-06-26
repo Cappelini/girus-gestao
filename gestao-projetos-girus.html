@@ -1785,7 +1785,7 @@ body {
     <div class="page-hd">
       <div>
         <div class="page-title">Fazer Hoje</div>
-        <div class="page-subtitle" id="hoje-subtitle">Atividades filtradas por prioridade</div>
+        <div class="page-subtitle" id="hoje-subtitle">Atrasadas + prazo hoje</div>
       </div>
       <button class="btn-add" onclick="renderHoje()" style="margin-left:auto">↻ Atualizar</button>
     </div>
@@ -2634,7 +2634,7 @@ function updateHojeBadge() {
   if (!badge || !state.projects) return;
   const pending = state.projects
     .flatMap(p => p.actions)
-    .filter(a => a.status !== 'concluido').length;
+    .filter(a => a.status !== 'concluido' && (isOverdue(a.deadline) || isToday(a.deadline))).length;
   badge.textContent = pending;
   badge.style.display = pending ? 'inline-block' : 'none';
 }
@@ -3783,10 +3783,10 @@ function renderHoje() {
   const status  = document.getElementById('hj-status')?.value || '';
   const prazo   = document.getElementById('hj-prazo')?.value || '';
 
-  // Collect all non-completed actions
+  // Collect actions: only overdue or due today (not completed)
   let all = state.projects.flatMap(p =>
     p.actions.map(a => ({...a, projName: p.name, projId: p.id, projCat: p.cat}))
-  ).filter(a => a.status !== 'concluido');
+  ).filter(a => a.status !== 'concluido' && (isOverdue(a.deadline) || isToday(a.deadline)));
 
   // Apply filters
   if (projId)  all = all.filter(a => a.projId === projId);
