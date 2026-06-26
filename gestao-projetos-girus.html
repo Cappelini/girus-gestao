@@ -46,6 +46,60 @@
   --sidebar-w:220px;
 }
 
+/* ── MODO CLARO ── */
+[data-theme="light"] {
+  --bg:       #F6F8FA;
+  --surface:  #FFFFFF;
+  --surface2: #EAEEF2;
+  --surface3: #DCE2EA;
+  --border:   #D0D7DE;
+  --border2:  #BCC4CE;
+  --text:     #1C2128;
+  --text2:    #57606A;
+  --text3:    #8C959F;
+
+  --navy:     #DBEAFE;
+  --navy2:    #1D6FA8;
+  --coral:    #CF3E2A;
+  --coral2:   #E05540;
+  --teal:     #1F8377;
+  --teal2:    #27A99A;
+  --amber:    #B58900;
+  --amber2:   #D4A000;
+  --purple:   #6A2E8E;
+  --green:    #1A6B1E;
+
+  --lnavy:    rgba(29,111,168,.12);
+  --lteal:    rgba(31,131,119,.10);
+  --lcoral:   rgba(207,62,42,.10);
+  --lamber:   rgba(181,137,0,.10);
+
+  --shadow:   0 2px 12px rgba(0,0,0,.08);
+  --shadow-lg:0 8px 32px rgba(0,0,0,.14);
+}
+
+/* Ajustes pontuais para modo claro */
+[data-theme="light"] .sidebar { background: #FFFFFF; border-right-color: #D0D7DE; }
+[data-theme="light"] .sidebar-brand { border-bottom-color: #D0D7DE; }
+[data-theme="light"] .nav-item.active { background: #DBEAFE; color: #1D6FA8; }
+[data-theme="light"] .nav-item.active .nav-icon { color: #1D6FA8; }
+[data-theme="light"] .nav-item:hover:not(.active) { background: #EAEEF2; }
+[data-theme="light"] .s-afazer { background: rgba(92,108,130,.10); color: #57606A; }
+[data-theme="light"] .badge-urgente { background: rgba(207,62,42,.12); color: #CF3E2A; }
+[data-theme="light"] .badge-andamento { background: rgba(29,111,168,.12); color: #1D6FA8; }
+[data-theme="light"] .badge-concluido { background: rgba(26,107,30,.12); color: #1A6B1E; }
+[data-theme="light"] .badge-bloqueado { background: rgba(181,137,0,.12); color: #B58900; }
+[data-theme="light"] .badge-afazer { background: rgba(92,108,130,.10); color: #57606A; }
+[data-theme="light"] .kpi-card { box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+[data-theme="light"] .modal-overlay { background: rgba(0,0,0,.35); }
+[data-theme="light"] input, [data-theme="light"] textarea, [data-theme="light"] select {
+  background: #FFFFFF; color: #1C2128; border-color: #D0D7DE;
+}
+[data-theme="light"] input:focus, [data-theme="light"] textarea:focus, [data-theme="light"] select:focus {
+  border-color: #1D6FA8; box-shadow: 0 0 0 3px rgba(29,111,168,.12);
+}
+[data-theme="light"] .tl2-bar-pct { text-shadow: none; color: #1C2128; }
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
@@ -1623,7 +1677,8 @@ body {
     <span id="hdate"></span>
     <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
       <div id="sidebar-user" style="font-size:10px;color:var(--text3);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
-      <button onclick="doLogout()" style="width:100%;padding:5px 8px;background:none;border:1px solid var(--border2);border-radius:var(--rs);color:var(--text3);font-size:11px;cursor:pointer;font-family:var(--font);text-align:left" onmouseover="this.style.color='var(--coral2)'" onmouseout="this.style.color='var(--text3)'">⎋ Sair</button>
+      <button id="theme-toggle" onclick="toggleTheme()" style="width:100%;padding:5px 8px;background:none;border:1px solid var(--border2);border-radius:var(--rs);color:var(--text3);font-size:11px;cursor:pointer;font-family:var(--font);text-align:left;margin-bottom:4px" onmouseover="this.style.color='var(--teal2)'" onmouseout="this.style.color='var(--text3)'">☀ Modo claro</button>
+            <button onclick="doLogout()" style="width:100%;padding:5px 8px;background:none;border:1px solid var(--border2);border-radius:var(--rs);color:var(--text3);font-size:11px;cursor:pointer;font-family:var(--font);text-align:left" onmouseover="this.style.color='var(--coral2)'" onmouseout="this.style.color='var(--text3)'">⎋ Sair</button>
       <div style="font-size:9px;color:var(--text3);opacity:0.5;margin-top:4px;text-align:right">v3.0.3 · 16/06</div>
       <div id="data-ts" style="font-size:9px;color:var(--text3);opacity:0.6;margin-top:2px;text-align:right"></div>
     </div>
@@ -2032,6 +2087,34 @@ body {
 </div>
 
 <script>
+
+
+// ── TEMA ─────────────────────────────────────────────────────
+(function() {
+  const t = localStorage.getItem('girus_theme');
+  if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+})();
+
+function toggleTheme() {
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  if (isLight) {
+    document.documentElement.removeAttribute('data-theme');
+    localStorage.setItem('girus_theme', 'dark');
+    document.getElementById('theme-toggle').textContent = '☀ Modo claro';
+  } else {
+    document.documentElement.setAttribute('data-theme', 'light');
+    localStorage.setItem('girus_theme', 'light');
+    document.getElementById('theme-toggle').textContent = '🌙 Modo escuro';
+  }
+}
+
+// Aplica label correto ao carregar
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('theme-toggle');
+  if (btn && document.documentElement.getAttribute('data-theme') === 'light') {
+    btn.textContent = '🌙 Modo escuro';
+  }
+});
 
 // ══════════════════════════════════════════════════════════════
 // DATA
