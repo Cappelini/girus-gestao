@@ -3747,19 +3747,25 @@ function renderBriefing() {
     const deadCls = deadClass(a.deadline);
     const statusLabel = { urgente:'🔥 Urgente', andamento:'🔄 Andamento', afazer:'📌 A Fazer', bloqueado:'⚠️ Bloqueado' };
     const lbl = statusLabel[a.status] || a.status;
-    return '<div class="hoje-item ' + a.status + '">' +
-      '<div class="hoje-check" title="Marcar como concluído" onclick="quickDoneBriefing('' + a.projId + '','' + a.id + '',this)">✓</div>' +
-      '<div class="hoje-item-body">' +
-        '<div class="hoje-item-proj">' + a.projName + ' · <span class="status-badge s-' + a.status + '" style="font-size:9px;padding:1px 6px">' + lbl + '</span></div>' +
-        '<div class="hoje-item-text">' + (a.tema ? '<span class="hoje-item-tema">' + a.tema + '</span>' : '') + a.text + '</div>' +
-        (a.notes ? '<div class="hoje-item-notes">' + a.notes + '</div>' : '') +
-      '</div>' +
-      '<span class="hoje-item-resp">' + (a.resp||'—') + '</span>' +
-      '<span class="hoje-item-dead ' + deadCls + '">' + fmtDate(a.deadline) + '</span>' +
-      '<div class="hoje-item-act">' +
-        '<button class="btn-open" onclick="goToAction('' + a.projId + '','' + a.id + '')" title="Abrir em Projetos">↗</button>' +
-        '<button class="btn-done-q" onclick="quickDoneBriefing('' + a.projId + '','' + a.id + '',this)" title="Concluir">✓ Feito</button>' +
-      '</div></div>';
+    return `
+      <div class="hoje-item ${a.status}">
+        <div class="hoje-check" title="Marcar como concluído"
+             onclick="quickDoneBriefing('${a.projId}','${a.id}',this)">✓</div>
+        <div class="hoje-item-body">
+          <div class="hoje-item-proj">${a.projName} · <span class="status-badge s-${a.status}" style="font-size:9px;padding:1px 6px">${statusLabel[a.status]||a.status}</span></div>
+          <div class="hoje-item-text">
+            ${a.tema ? `<span class="hoje-item-tema">${a.tema}</span>` : ''}${a.text}
+          </div>
+          ${a.notes ? `<div class="hoje-item-notes">${a.notes}</div>` : ''}
+        </div>
+        <span class="hoje-item-resp">${a.resp||'—'}</span>
+        <span class="hoje-item-dead ${deadCls}">${fmtDate(a.deadline)}</span>
+        <div class="hoje-item-act">
+          <button class="btn-open" onclick="goToAction('${a.projId}','${a.id}')" title="Abrir em Projetos">↗</button>
+          <button class="btn-done-q" onclick="quickDoneBriefing('${a.projId}','${a.id}',this)" title="Concluir">✓ Feito</button>
+        </div>
+      </div>`;
+  }
   }
 
   if (briefingGrupo === 'flat') {
