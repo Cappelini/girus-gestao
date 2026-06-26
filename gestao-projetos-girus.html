@@ -3316,263 +3316,187 @@ function renderKanbanView(p) {
 
 // ── TIMELINE ─────────────────────────────────────────────────────────────────
 function renderTimelineView(p) {
-  const COL_W = 62;
-  const ROW_H = 58;
-  const today = new Date();
-  today.setHours(0,0,0,0);
+  const el = document.getElementById('actions-view-' + p.id);
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  // ── Config ──────────────────────────────────────────────
+  const COL_W   = 62;   // px per month column
+  const ROW_H   = 58;   // px per row
+
+  // Month range: 3 months before today → 18 months ahead
   const rangeStart = new Date(today.getFullYear(), today.getMonth() - 3, 1);
   const TOTAL_MO = 24;
+  const months = Array.from({length: TOTAL_MO}, (_, i) =>
+    new Date(rangeStart.getFullYear(), rangeStart.getMonth() + i, 1)
+  );
 
-  // helpers
+  // Today's X position
+  const todayOffsetMo = (today.getFullYear() - rangeStart.getFullYear()) * 12 +
+                         (today.getMonth()    - rangeStart.getMonth());
+  const todayFrac     = today.getDate() / new Date(today.getFullYear(), today.getMonth()+1, 0).getDate();
+  const todayX        = (todayOffsetMo + todayFrac) * COL_W;
+
+  // ── Helpers ─────────────────────────────────────────────
+  const MON_PT = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+
   function initials(resp) {
-    if (!resp) return '?';
-    const parts = resp.trim().split(/[\s/]+/);
-    return parts.map(s => s[0] ? s[0].toUpperCase() : '').join('').slice(0,2);
+    if (!resp) return '??';
+    const w = resp.trim().split(/[\s\/\-]+/);
+    return (w.length >= 2 ? w[0][0]+w[1][0] : resp.substring(0,2)).toUpperCase();
   }
+
   function badgeColor(resp) {
-    if (!resp) return '#4A5568';
-    const r = resp.toLowerCase();
-    if (r.includes('capp') && r.includes('helo')) return '#7B3FA0';
-    if (r.includes('helo')) return '#2A9D8F';
-    if (r.includes('capp')) return '#3B6EA8';
-    return '#4A5568';
+    const map = { 'Cappelini':'#3B6EA8','Capp':'#3B6EA8','Helo':'#2A9D8F','Capp/Helo':'#7B3FA0' };
+    return map[resp] || '#556070';
   }
+
   function barColor(status) {
-    const map = { urgente:'#E8604C', andamento:'#3B6EA8', afazer:'#4A5568', bloqueado:'#E9C46A', concluido:'#2E7D32' };
-    return map[status] || '#4A5568';
+    return { urgente:'#E8604C', andamento:'#3B6EA8', afazer:'#4A5568',
+             bloqueado:'#E9C46A', concluido:'#2E7D32' }[status] || '#4A5568';
   }
+
   function fmtDl(dl) {
     if (!dl) return '';
-    const d = new Date(dl + 'T12:00:00');
-    return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'short' });
+    const d = new Date(dl+'T00:00:00');
+    return d.toLocaleDateString('pt-BR',{day:'numeric',month:'short',year:'2-digit'});
   }
-  function moOffset(d) {
-    return (d.getFullYear() - rangeStart.getFullYear()) * 12 + d.getMonth() - rangeStart.getMonth();
-  }
+
+  // Bar geometry: start = today (or 1 month before deadline if deadline is past)
   function barGeom(a) {
     if (!a.deadline) return null;
-    const dl = new Date(a.deadline + 'T12:00:00');
-    const dlMo = moOffset(dl);
-    if (dlMo < 0 || dlMo >= TOTAL_MO) return null;
-    // start: first of current month, or 1 month before deadline if overdue
-    let startMo = moOffset(new Date(today.getFullYear(), today.getMonth(), 1));
-    if (startMo < 0) startMo = 0;
-    if (dlMo < startMo) startMo = Math.max(0, dlMo - 1);
-    const x = startMo * COL_W + 6;
-    const endX = (dlMo + 1) * COL_W - 6;
-    const width = Math.max(20, Math.min(COL_W * 0.7, endX - x));
-    // progress
-    let pct = 0;
-    if (a.status === 'concluido') pct = 100;
-    else if (a.status === 'afazer') pct = 0;
-    else {
-      const startDate = new Date(rangeStart.getFullYear(), rangeStart.getMonth() + startMo, 1);
-      const total = dl - startDate;
-      const elapsed = today - startDate;
-      pct = total > 0 ? Math.min(90, Math.max(0, Math.round(elapsed / total * 100))) : 0;
+    const deadline = new Date(a.deadline+'T00:00:00');
+
+    // Start of bar: first of today's month (or 1 mo before deadline if overdue)
+    let barStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    if (deadline < today) {
+      barStart = new Date(deadline.getFullYear(), deadline.getMonth()-1, 1);
     }
+
+    const startMo = (barStart.getFullYear()-rangeStart.getFullYear())*12 +
+                    (barStart.getMonth()-rangeStart.getMonth());
+    const endMo   = (deadline.getFullYear()-rangeStart.getFullYear())*12 +
+                    (deadline.getMonth()-rangeStart.getMonth());
+
+    if (endMo < 0 || startMo >= TOTAL_MO) return null; // out of visible range
+
+    const x     = Math.max(0, startMo) * COL_W;
+    const endX  = Math.min(TOTAL_MO, endMo + 1) * COL_W;
+    const width = Math.max(COL_W * 0.7, endX - x);
+
+    // Progress %
+    const spanDays  = Math.max(1, (deadline - barStart) / 86400000);
+    const elapsed   = Math.max(0, (today - barStart) / 86400000);
+    const pct = a.status === 'concluido' ? 100
+              : a.status === 'afazer'    ? 0
+              : Math.min(90, Math.round((elapsed / spanDays) * 100));
+
     return { x, width, pct };
   }
 
-  // Build actions list from projects
-  const actions = [];
-  (p || []).forEach(proj => {
-    (proj.actions || []).forEach(a => {
-      actions.push({ ...a, _projName: proj.name, _projCat: proj.cat || '', _projStatus: proj.status });
-    });
-  });
-  // Sort: non-done first, then by deadline
-  actions.sort((a, b) => {
-    const aDone = a.status === 'concluido';
-    const bDone = b.status === 'concluido';
-    if (aDone !== bDone) return aDone ? 1 : -1;
-    if (a.deadline && b.deadline) return a.deadline.localeCompare(b.deadline);
-    if (a.deadline) return -1;
-    if (b.deadline) return 1;
-    return 0;
-  });
-
-  // Build month headers
-  const months = [];
-  for (let i = 0; i < TOTAL_MO; i++) {
-    const d = new Date(rangeStart.getFullYear(), rangeStart.getMonth() + i, 1);
-    months.push({ d, isToday: d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth() });
-  }
-  // Year groups
-  const yearGroups = [];
-  let curYear = null, curCount = 0;
-  months.forEach(m => {
-    const y = m.d.getFullYear();
-    if (y !== curYear) { if (curYear) yearGroups.push({ year: curYear, count: curCount }); curYear = y; curCount = 0; }
-    curCount++;
-  });
-  if (curYear) yearGroups.push({ year: curYear, count: curCount });
-
-  // Today X position
-  const todayMoOff = moOffset(new Date(today.getFullYear(), today.getMonth(), 1));
-  const dayFrac = (today.getDate() - 1) / (new Date(today.getFullYear(), today.getMonth()+1, 0).getDate());
-  const todayX = todayMoOff * COL_W + dayFrac * COL_W;
-
-  // Outer container
-  const outer = document.createElement('div');
-  outer.className = 'tl2-outer';
-
-  // HEAD ROW
-  const headRow = document.createElement('div');
-  headRow.className = 'tl2-head-row';
-  const headLeft = document.createElement('div');
-  headLeft.className = 'tl2-head-left';
-  headLeft.textContent = 'Ação';
-  const headRight = document.createElement('div');
-  headRight.className = 'tl2-head-right';
-  headRight.style.overflow = 'hidden';
+  // ── Build month headers ──────────────────────────────────
   // Year row
-  const yrRow = document.createElement('div');
-  yrRow.className = 'tl2-yr-row';
-  yrRow.style.width = (TOTAL_MO * COL_W) + 'px';
-  yearGroups.forEach(yg => {
-    const c = document.createElement('div');
-    c.className = 'tl2-yr-cell';
-    c.style.width = (yg.count * COL_W) + 'px';
-    c.textContent = yg.year;
-    yrRow.appendChild(c);
-  });
-  // Month row
-  const moRow = document.createElement('div');
-  moRow.className = 'tl2-mo-row';
-  moRow.style.width = (TOTAL_MO * COL_W) + 'px';
+  const yearSpans = [];
   months.forEach(m => {
-    const c = document.createElement('div');
-    c.className = 'tl2-mo-cell' + (m.isToday ? ' tl2-today-mo' : '');
-    c.style.width = COL_W + 'px';
-    c.textContent = m.d.toLocaleDateString('pt-BR', { month:'short' }).replace('.','');
-    moRow.appendChild(c);
+    const y = m.getFullYear();
+    if (!yearSpans.length || yearSpans[yearSpans.length-1].year !== y)
+      yearSpans.push({year:y, count:1});
+    else yearSpans[yearSpans.length-1].count++;
   });
-  const moWrap = document.createElement('div');
-  moWrap.className = 'tl2-months-wrap';
-  moWrap.style.flexDirection = 'column';
-  moWrap.style.display = 'flex';
-  moWrap.appendChild(yrRow);
-  moWrap.appendChild(moRow);
-  headRight.appendChild(moWrap);
-  headRow.appendChild(headLeft);
-  headRow.appendChild(headRight);
 
-  // BODY ROW
-  const bodyRow = document.createElement('div');
-  bodyRow.className = 'tl2-body-row';
-  const leftCol = document.createElement('div');
-  leftCol.className = 'tl2-left-col';
-  const rightCol = document.createElement('div');
-  rightCol.className = 'tl2-right-col';
-  const gridW = TOTAL_MO * COL_W;
+  const yrHtml = yearSpans.map(g =>
+    `<div class="tl2-yr-cell" style="width:${g.count*COL_W}px">${g.year}</div>`
+  ).join('');
 
-  // Grid lines + today line (absolute inside rightCol)
-  const gridCanvas = document.createElement('div');
-  gridCanvas.style.cssText = 'position:absolute;top:0;left:0;width:' + gridW + 'px;height:' + Math.max(actions.length * ROW_H, 100) + 'px;pointer-events:none;';
-  months.forEach((m, i) => {
-    const gl = document.createElement('div');
-    gl.className = 'tl2-gridline';
-    gl.style.left = (i * COL_W) + 'px';
-    gridCanvas.appendChild(gl);
+  const moHtml = months.map(m => {
+    const isTodayMo = m.getFullYear()===today.getFullYear() && m.getMonth()===today.getMonth();
+    return `<div class="tl2-mo-cell${isTodayMo?' tl2-today-mo':''}" style="width:${COL_W}px">${MON_PT[m.getMonth()]}</div>`;
+  }).join('');
+
+  // ── Grid lines ───────────────────────────────────────────
+  const gridLines = months.map((_,i) =>
+    `<div class="tl2-gridline" style="left:${i*COL_W}px"></div>`
+  ).join('');
+
+  // ── Rows ─────────────────────────────────────────────────
+  const sorted = [...p.actions].sort((a,b) => {
+    if (!a.deadline && !b.deadline) return 0;
+    if (!a.deadline) return 1;
+    if (!b.deadline) return -1;
+    return a.deadline.localeCompare(b.deadline);
   });
-  if (todayMoOff >= 0 && todayMoOff < TOTAL_MO) {
-    const tl = document.createElement('div');
-    tl.className = 'tl2-today-line';
-    tl.style.left = todayX + 'px';
-    const td = document.createElement('div');
-    td.className = 'tl2-today-dot';
-    tl.appendChild(td);
-    gridCanvas.appendChild(tl);
-  }
-  rightCol.appendChild(gridCanvas);
 
-  actions.forEach(a => {
-    // Left row
-    const rl = document.createElement('div');
-    rl.className = 'tl2-row-left' + (a.status === 'concluido' ? ' tl2-done' : '');
-    rl.onclick = () => { if (window._openActionModal) window._openActionModal(a._projName, a); };
-    const cat = document.createElement('div');
-    cat.className = 'tl2-cat';
-    cat.textContent = a._projCat || a._projName;
-    const name = document.createElement('div');
-    name.className = 'tl2-name';
-    name.textContent = a.text || '(sem título)';
-    const meta = document.createElement('div');
-    meta.className = 'tl2-meta';
-    if (a.resp) {
-      const badge = document.createElement('span');
-      badge.className = 'tl2-badge';
-      badge.style.background = badgeColor(a.resp);
-      badge.textContent = initials(a.resp);
-      meta.appendChild(badge);
-      const resp = document.createElement('span');
-      resp.className = 'tl2-resp';
-      resp.textContent = a.resp;
-      meta.appendChild(resp);
-    }
-    if (a.deadline) {
-      const dl = document.createElement('span');
-      dl.className = 'tl2-dl';
-      dl.textContent = '· ' + fmtDl(a.deadline);
-      meta.appendChild(dl);
-    }
-    rl.appendChild(cat);
-    rl.appendChild(name);
-    rl.appendChild(meta);
-    leftCol.appendChild(rl);
+  let leftRows  = '';
+  let rightRows = '';
+  const gridW   = TOTAL_MO * COL_W;
 
-    // Right row
-    const rr = document.createElement('div');
-    rr.className = 'tl2-row-right';
-    rr.style.width = gridW + 'px';
-    const geom = barGeom(a);
+  sorted.forEach(a => {
+    const geom  = barGeom(a);
+    const bc    = barColor(a.status);
+    const init  = initials(a.resp || '');
+    const bdgC  = badgeColor(a.resp || '');
+    const done  = a.status === 'concluido';
+
+    leftRows += `
+      <div class="tl2-row-left${done?' tl2-done':''}" onclick="openActionModal('${p.id}','${a.id}')">
+        <div class="tl2-cat">${a.tema || '&nbsp;'}</div>
+        <div class="tl2-name" title="${a.text}">${a.text}</div>
+        <div class="tl2-meta">
+          <span class="tl2-badge" style="background:${bdgC}">${init}</span>
+          <span class="tl2-resp">${a.resp||'—'}</span>
+          ${a.deadline ? `<span class="tl2-dl">· ${fmtDl(a.deadline)}</span>` : ''}
+        </div>
+      </div>`;
+
+    let barHtml = '';
     if (geom) {
-      const bar = document.createElement('div');
-      bar.className = 'tl2-bar';
-      bar.style.left = geom.x + 'px';
-      bar.style.width = geom.width + 'px';
-      const bc = barColor(a.status);
-      bar.style.background = bc + '22';
-      bar.style.borderColor = bc;
-      const fill = document.createElement('div');
-      fill.className = 'tl2-bar-fill';
-      fill.style.width = geom.pct + '%';
-      fill.style.background = bc;
-      bar.appendChild(fill);
-      if (geom.width > 30) {
-        const pct = document.createElement('div');
-        pct.className = 'tl2-bar-pct';
-        pct.textContent = geom.pct + '%';
-        bar.appendChild(pct);
-      }
-      bar.onclick = (e) => { e.stopPropagation(); if (window._openActionModal) window._openActionModal(a._projName, a); };
-      rr.appendChild(bar);
+      barHtml = `
+        <div class="tl2-bar" style="left:${geom.x}px;width:${geom.width}px;background:${bc}22;border-color:${bc}88;"
+             onclick="openActionModal('${p.id}','${a.id}')">
+          <div class="tl2-bar-fill" style="width:${geom.pct}%;background:${bc}cc"></div>
+          <span class="tl2-bar-pct">${geom.pct}%</span>
+        </div>`;
     }
-    rightCol.appendChild(rr);
+
+    rightRows += `<div class="tl2-row-right" style="width:${gridW}px">${barHtml}</div>`;
   });
 
-  if (actions.length === 0) {
-    const empty = document.createElement('div');
-    empty.style.cssText = 'padding:40px;color:var(--text3);text-align:center;font-size:13px;';
-    empty.textContent = 'Nenhuma ação com prazo definido.';
-    leftCol.appendChild(empty);
+  // ── Assemble ─────────────────────────────────────────────
+  const uid = p.id;
+  el.innerHTML = `
+  <div class="tl2-outer">
+    <!-- Header row -->
+    <div class="tl2-head-row">
+      <div class="tl2-head-left">Ação</div>
+      <div class="tl2-head-right" id="tl2hr-${uid}">
+        <div style="width:${gridW}px">
+          <div class="tl2-yr-row">${yrHtml}</div>
+          <div class="tl2-mo-row">${moHtml}</div>
+        </div>
+      </div>
+    </div>
+    <!-- Body row -->
+    <div class="tl2-body-row">
+      <div class="tl2-left-col" id="tl2lc-${uid}">${leftRows}</div>
+      <div class="tl2-right-col" id="tl2rc-${uid}">
+        <div style="width:${gridW}px;position:relative">
+          ${gridLines}
+          <div class="tl2-today-line" style="left:${todayX}px">
+            <div class="tl2-today-dot"></div>
+          </div>
+          ${rightRows}
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  // Sync horizontal scroll: right-body → header
+  const hdr  = el.querySelector('#tl2hr-'+uid);
+  const body = el.querySelector('#tl2rc-'+uid);
+  if (body && hdr) {
+    body.addEventListener('scroll', () => { hdr.scrollLeft = body.scrollLeft; }, {passive:true});
+    // Scroll to today on open
+    requestAnimationFrame(() => { body.scrollLeft = Math.max(0, todayX - 80); });
   }
-
-  bodyRow.appendChild(leftCol);
-  bodyRow.appendChild(rightCol);
-
-  // Sync scroll: rightCol scroll → headRight scroll
-  rightCol.addEventListener('scroll', () => { headRight.scrollLeft = rightCol.scrollLeft; leftCol.scrollTop = rightCol.scrollTop; });
-  leftCol.addEventListener('scroll', () => { rightCol.scrollTop = leftCol.scrollTop; });
-
-  outer.appendChild(headRow);
-  outer.appendChild(bodyRow);
-
-  // Scroll to today
-  requestAnimationFrame(() => { rightCol.scrollLeft = Math.max(0, todayX - 80); });
-
-  return outer;
 }
 
 
