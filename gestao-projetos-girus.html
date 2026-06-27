@@ -1815,13 +1815,13 @@ body {
           <option value="semana">Esta semana</option>
         </select>
       </div>
-      <div class="hoje-filter-group" style="flex-direction:row;align-items:flex-end;gap:6px;flex-wrap:wrap">
-        <button id="br-grp-status" class="hj-grp-btn active" onclick="setBriefingGrupo('status')">Por Status</button>
-        <button id="br-grp-proj"   class="hj-grp-btn" onclick="setBriefingGrupo('proj')">Por Projeto</button>
-        <button id="br-grp-resp"   class="hj-grp-btn" onclick="setBriefingGrupo('resp')">Por Responsável</button>
-        <button id="br-grp-flat"   class="hj-grp-btn" onclick="setBriefingGrupo('flat')">Sem Grupo</button>
-        <button class="hj-grp-btn" onclick="limparFiltrosBriefing()">✕ Limpar</button>
+      <div class="hoje-agrupar">
+        <button id="br-grp-status" class="active" onclick="setBriefingGrupo('status')">Por Status</button>
+        <button id="br-grp-proj" onclick="setBriefingGrupo('proj')">Por Projeto</button>
+        <button id="br-grp-resp" onclick="setBriefingGrupo('resp')">Por Responsável</button>
+        <button id="br-grp-flat" onclick="setBriefingGrupo('flat')">Sem Grupo</button>
       </div>
+      <button class="hoje-filter-clear" onclick="limparFiltrosBriefing()">✕ Limpar</button>
     </div>
 
     <div class="hoje-stats" id="briefing-stats"></div>
