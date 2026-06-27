@@ -1773,63 +1773,61 @@ body {
         <div class="page-title">Briefing do Dia</div>
         <div class="page-subtitle" id="briefing-subtitle">Prioridades e ações para hoje</div>
       </div>
+      <button class="btn-add" onclick="renderBriefing()" style="margin-left:auto">↻ Atualizar</button>
     </div>
-    <button class="btn-add" onclick="renderBriefing()" style="margin-left:auto">↻ Atualizar</button>
+
+    <!-- Filtros -->
+    <div class="hoje-filters">
+      <div class="hoje-filter-group">
+        <label>Buscar</label>
+        <input type="text" id="br-search" placeholder="texto da ação…" oninput="renderBriefing()">
+      </div>
+      <div class="hoje-filter-group">
+        <label>Projeto</label>
+        <select id="br-proj" onchange="renderBriefing()">
+          <option value="">Todos os projetos</option>
+        </select>
+      </div>
+      <div class="hoje-filter-group">
+        <label>Responsável</label>
+        <select id="br-resp" onchange="renderBriefing()">
+          <option value="">Todos</option>
+          <option value="Cappelini">Cappelini</option>
+          <option value="Helo">Helo</option>
+        </select>
+      </div>
+      <div class="hoje-filter-group">
+        <label>Status</label>
+        <select id="br-status" onchange="renderBriefing()">
+          <option value="">Todos (exceto concluído)</option>
+          <option value="urgente">🔥 Urgente</option>
+          <option value="andamento">🔄 Em Andamento</option>
+          <option value="afazer">📌 A Fazer</option>
+          <option value="bloqueado">⚠️ Bloqueado</option>
+        </select>
+      </div>
+      <div class="hoje-filter-group">
+        <label>Prazo</label>
+        <select id="br-prazo" onchange="renderBriefing()">
+          <option value="">Todos os prazos</option>
+          <option value="hoje">Vence hoje</option>
+          <option value="atrasado">Atrasado</option>
+          <option value="semana">Esta semana</option>
+        </select>
+      </div>
+      <div class="hoje-filter-group" style="flex-direction:row;align-items:flex-end;gap:6px;flex-wrap:wrap">
+        <button id="br-grp-status" class="hj-grp-btn active" onclick="setBriefingGrupo('status')">Por Status</button>
+        <button id="br-grp-proj"   class="hj-grp-btn" onclick="setBriefingGrupo('proj')">Por Projeto</button>
+        <button id="br-grp-resp"   class="hj-grp-btn" onclick="setBriefingGrupo('resp')">Por Responsável</button>
+        <button id="br-grp-flat"   class="hj-grp-btn" onclick="setBriefingGrupo('flat')">Sem Grupo</button>
+        <button class="hj-grp-btn" onclick="limparFiltrosBriefing()">✕ Limpar</button>
+      </div>
+    </div>
+
+    <div class="hoje-stats" id="briefing-stats"></div>
+    <div class="hoje-list" id="briefing-list"></div>
   </div>
 
-  <!-- Filtros -->
-  <div class="hoje-filters">
-    <div class="hoje-filter-group">
-      <label>Buscar</label>
-      <input type="text" id="br-search" placeholder="texto da ação…" oninput="renderBriefing()">
-    </div>
-    <div class="hoje-filter-group">
-      <label>Projeto</label>
-      <select id="br-proj" onchange="renderBriefing()">
-        <option value="">Todos os projetos</option>
-      </select>
-    </div>
-    <div class="hoje-filter-group">
-      <label>Responsável</label>
-      <select id="br-resp" onchange="renderBriefing()">
-        <option value="">Todos</option>
-        <option value="Cappelini">Cappelini</option>
-        <option value="Helo">Helo</option>
-      </select>
-    </div>
-    <div class="hoje-filter-group">
-      <label>Status</label>
-      <select id="br-status" onchange="renderBriefing()">
-        <option value="">Todos (exceto concluído)</option>
-        <option value="urgente">🔥 Urgente</option>
-        <option value="andamento">🔄 Em Andamento</option>
-        <option value="afazer">📌 A Fazer</option>
-        <option value="bloqueado">⚠️ Bloqueado</option>
-      </select>
-    </div>
-    <div class="hoje-filter-group">
-      <label>Prazo</label>
-      <select id="br-prazo" onchange="renderBriefing()">
-        <option value="">Todos os prazos</option>
-        <option value="hoje">Vence hoje</option>
-        <option value="atrasado">Atrasado</option>
-        <option value="semana">Esta semana</option>
-      </select>
-    </div>
-    <div class="hoje-filter-group" style="flex-direction:row;align-items:flex-end;gap:6px;flex-wrap:wrap">
-      <button id="br-grp-status" class="hj-grp-btn active" onclick="setBriefingGrupo('status')">Por Status</button>
-      <button id="br-grp-proj"   class="hj-grp-btn" onclick="setBriefingGrupo('proj')">Por Projeto</button>
-      <button id="br-grp-resp"   class="hj-grp-btn" onclick="setBriefingGrupo('resp')">Por Responsável</button>
-      <button id="br-grp-flat"   class="hj-grp-btn" onclick="setBriefingGrupo('flat')">Sem Grupo</button>
-      <button class="hj-grp-btn" onclick="limparFiltrosBriefing()">✕ Limpar</button>
-    </div>
-  </div>
-
-  <div class="hoje-stats" id="briefing-stats"></div>
-  <div class="hoje-list" id="briefing-list"></div>
-</div>
-
-  <!-- ══ FAZER HOJE ══ -->
   <div class="tab-pane" id="tab-hoje">
     <div class="page-hd">
       <div>
