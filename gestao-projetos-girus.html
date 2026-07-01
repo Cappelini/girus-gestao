@@ -3400,12 +3400,20 @@ function renderKanbanView(p) {
     let cards = p.actions.filter(a => a.status === col.key);
     if (activeResp) cards = cards.filter(a => a.resp === activeResp);
 
-    // Sort by deadline: com prazo primeiro (asc), sem prazo por último
-    cards = [...cards].sort((a, b) => {
-      const da = a.deadline || '9999-99-99';
-      const db = b.deadline || '9999-99-99';
-      return da < db ? -1 : da > db ? 1 : 0;
-    });
+    // Sort: concluido por completedAt desc; outros por deadline asc
+    if (col.key === 'concluido') {
+      cards = [...cards].sort((a, b) => {
+        const da = a.completedAt || a.deadline || '';
+        const db = b.completedAt || b.deadline || '';
+        return da > db ? -1 : da < db ? 1 : 0;
+      });
+    } else {
+      cards = [...cards].sort((a, b) => {
+        const da = a.deadline || '9999-99-99';
+        const db = b.deadline || '9999-99-99';
+        return da < db ? -1 : da > db ? 1 : 0;
+      });
+    }
 
     const totalCol = p.actions.filter(a => a.status === col.key).length;
     const countLabel = activeResp && cards.length !== totalCol
@@ -3636,6 +3644,8 @@ function toggleDone(projId, actionId) {
   const a = p.actions.find(x => x.id === actionId);
   const wasConcluido = a.status === 'concluido';
   a.status = wasConcluido ? 'andamento' : 'concluido';
+  if (!wasConcluido) a.completedAt = new Date().toISOString();
+  else delete a.completedAt;
   logActivity(projId, p.name, a.text, wasConcluido ? 'reaberto' : 'concluido', '');
   saveState();
   renderDetail(projId);
@@ -3808,6 +3818,7 @@ function quickDoneBriefing(projId, actionId, el) {
   const a = p.actions.find(x => x.id === actionId);
   if (!a) return;
   a.status = 'concluido';
+  a.completedAt = new Date().toISOString();
   saveState();
   const item = el.closest('.hoje-item');
   if (item) {
@@ -4013,6 +4024,7 @@ function quickDoneHoje(projId, actionId, el) {
   const a = p.actions.find(x => x.id === actionId);
   if (!a) return;
   a.status = 'concluido';
+  a.completedAt = new Date().toISOString();
   saveState();
   // Remove item visually
   const item = el.closest('.hoje-item');
