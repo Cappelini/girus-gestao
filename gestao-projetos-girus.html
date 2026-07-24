@@ -276,7 +276,7 @@ body {
 }
 .dash-section-hd.coral { color: var(--coral2); }
 .dash-section-hd.teal  { color: var(--teal2); }
-.dash-list { padding: 4px 0; }
+.dash-list { padding: 4px 0; max-height: 280px; overflow-y: auto; }
 .dash-item {
   display: flex;
   align-items: flex-start;
@@ -292,6 +292,9 @@ body {
 .dash-item-proj { font-weight: 600; color: var(--navy2); min-width: 120px; font-size: 11px; flex-shrink: 0; }
 .dash-item-txt  { color: var(--text2); flex: 1; line-height: 1.4; }
 .dash-item-dead { font-size: 11px; font-weight: 600; white-space: nowrap; margin-left: auto; }
+.dash-ver-mais { text-align:center; padding:8px 16px; cursor:pointer; color:var(--navy2); font-size:12px; opacity:.8; border-top:1px solid var(--border); }
+.dash-ver-mais:hover { opacity:1; background:var(--surface2); text-decoration:underline; }
+.dash-count { background:var(--surface2); color:var(--text2); font-size:10px; padding:2px 7px; border-radius:10px; margin-left:8px; font-weight:700; }
 
 /* ── DASHBOARD CHARTS ── */
 .dash-charts-row {
@@ -2951,16 +2954,18 @@ function renderDashboard() {
   // Urgent list
   const urgentEl = document.getElementById('dash-urgent');
   const urgItems = [...urgent, ...thisWeek];
-  urgentEl.innerHTML = urgItems.length ? urgItems.map(a => `
+  const urgTotal = urgItems.length;
+  if (urgTotal > 0) { const hd = urgentEl.previousElementSibling; if (!hd.querySelector('.dash-count')) { const badge = document.createElement('span'); badge.className='dash-count'; badge.textContent=urgTotal; hd.appendChild(badge); } }
+  urgentEl.innerHTML = urgTotal ? urgItems.slice(0,5).map(a => `
     <div class="dash-item">
       <span class="dash-item-proj">${a.projName}</span>
       <span class="dash-item-txt">${a.text}</span>
       <span class="dash-item-dead ${deadClass(a.deadline)}">${fmtDate(a.deadline)}</span>
-    </div>`).join('') : '<div class="empty-msg">Nenhum item urgente. 🎉</div>';
+    </div>`).join('') + (urgTotal > 5 ? `<div class="dash-ver-mais" onclick="renderDashboard()">+ ${urgTotal - 5} itens mais →</div>` : '') : '<div class="empty-msg">Nenhum item urgente. 🎉</div>';
 
   // WIP
   const wipEl = document.getElementById('dash-wip');
-  wipEl.innerHTML = wip.slice(0,8).map(a => `
+  wipEl.innerHTML = wip.slice(0,5).map(a => `
     <div class="dash-item">
       <span class="dash-item-proj">${a.projName}</span>
       <span class="dash-item-txt">${a.text}</span>
@@ -3221,7 +3226,7 @@ function selectProject(id) {
 const projViews = {};
 
 function renderDetail(id) {
-  const view = projViews[id] || 'lista';
+  const view = projViews[id] || 'kanban';
   renderDetailWithView(id, view);
 }
 
