@@ -81,7 +81,7 @@
 /* Ajustes pontuais para modo claro */
 [data-theme="light"] .sidebar { background: #FFFFFF; border-right-color: #D0D7DE; }
 [data-theme="light"] .sidebar-brand { border-bottom-color: #D0D7DE; }
-[data-theme="light"] .nav-item.active { background: #DBEAFE; color: #1D6FA8; }
+[data-theme="light"] .nav-item.active { background: #DBEAFE; color: #1D6FA8; border-left: 2px solid var(--teal); padding-left: 10px; }
 [data-theme="light"] .nav-item.active .nav-icon { color: #1D6FA8; }
 [data-theme="light"] .nav-item:hover:not(.active) { background: #EAEEF2; }
 [data-theme="light"] .s-afazer { background: rgba(92,108,130,.10); color: #57606A; }
@@ -163,9 +163,10 @@ body {
   text-align: left;
 }
 .nav-item:hover { background: var(--surface2); color: var(--text); }
-.nav-item.active { background: var(--lnavy); color: var(--navy2); font-weight: 600; }
-.nav-item.active .nav-icon { opacity: 1; }
-.nav-icon { font-size: 15px; flex-shrink: 0; opacity: .7; }
+.nav-item.active { background: var(--lnavy); color: var(--text1); font-weight: 600; border-left: 2px solid var(--teal); padding-left: 10px; }
+.nav-item.active .nav-icon { opacity:1; color:var(--teal); }
+.nav-item:hover .nav-icon { opacity:1; color:var(--text1); }
+.nav-icon { display:flex; align-items:center; justify-content:center; width:20px; height:20px; flex-shrink:0; opacity:.6; color:var(--text3); transition:opacity .15s, color .15s; }
 .nav-sep {
   height: 1px; background: var(--border);
   margin: 8px 4px;
@@ -191,15 +192,18 @@ body {
 /* ── PAGE HEADER ── */
 .page-hd {
   margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
 }
 .page-title {
-  font-size: clamp(18px, 2.5vw, 22px);
+  font-size: clamp(18px, 2.5vw, 24px);
   font-weight: 700;
   color: var(--text);
+  letter-spacing: -.3px;
 }
 .page-subtitle {
   font-size: 13px;
@@ -294,6 +298,7 @@ body {
 .dash-item-dead { font-size: 11px; font-weight: 600; white-space: nowrap; margin-left: auto; }
 .dash-ver-mais { text-align:center; padding:8px 16px; cursor:pointer; color:var(--navy2); font-size:12px; opacity:.8; border-top:1px solid var(--border); }
 .dash-ver-mais:hover { opacity:1; background:var(--surface2); text-decoration:underline; }
+.dash-item-hidden { display: none; }
 .dash-count { background:var(--surface2); color:var(--text2); font-size:10px; padding:2px 7px; border-radius:10px; margin-left:8px; font-weight:700; }
 
 /* ── DASHBOARD CHARTS ── */
@@ -926,25 +931,31 @@ body {
 }
 .kanban-col { min-width: 185px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
 .kanban-col-hd {
-  padding: 8px 10px;
+  padding: 9px 12px;
   border-radius: var(--rs);
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: .5px;
+  letter-spacing: .8px;
   display: flex;
   justify-content: space-between;
+  align-items: center;
 }
 .kanban-card {
   background: var(--surface2);
   border: 1px solid var(--border);
   border-radius: var(--rs);
-  padding: 11px 13px;
+  padding: 12px 14px;
   font-size: 13px;
   cursor: pointer;
   transition: .15s;
-  box-shadow: 0 1px 4px rgba(0,0,0,.2);
+  box-shadow: 0 1px 3px rgba(0,0,0,.18), 0 1px 2px rgba(0,0,0,.12);
 }
+.kanban-card[data-status="urgente"]  { border-left: 3px solid var(--coral); }
+.kanban-card[data-status="andamento"]{ border-left: 3px solid var(--teal); }
+.kanban-card[data-status="afazer"]   { border-left: 3px solid var(--navy2); }
+.kanban-card[data-status="bloqueado"]{ border-left: 3px solid var(--amber); }
+.kanban-card[data-status="concluido"]{ border-left: 3px solid var(--border2); opacity:.8; }
 .kanban-card:hover { border-color: var(--teal); box-shadow: 0 2px 12px rgba(42,157,143,.2); transform: translateY(-1px); }
 .kanban-card-title { color: var(--text); font-weight: 600; margin-bottom: 6px; line-height: 1.35; }
 .kanban-card-meta  { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
@@ -965,6 +976,10 @@ body {
   gap: 6px;
 }
 .kanban-move-btn span:hover { color: var(--teal2); text-decoration: underline; }
+.kanban-card { cursor: grab; }
+.kanban-card.kd-dragging { opacity: .3; cursor: grabbing; box-shadow: none; transform: none; }
+.kanban-col.kd-over { outline: 2px dashed var(--teal); outline-offset: -3px; background: rgba(42,157,143,.05); border-radius: var(--rs); transition: background .15s; }
+.kanban-drop-ph { min-height: 52px; border: 2px dashed var(--teal); border-radius: var(--rs); background: rgba(42,157,143,.05); margin: 0; }
 
 /* ── HOJE ── */
 .hoje-filters {
@@ -1603,6 +1618,35 @@ body {
   padding: 4px 12px;
   display: none;
 }
+
+/* ══ COFRE ══════════════════════════════════════════════════════ */
+.vault-lock-screen { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:64px 24px; max-width:360px; margin:0 auto; text-align:center; }
+.vault-lock-icon  { font-size:56px; margin-bottom:16px; }
+.vault-lock-title { font-size:22px; font-weight:700; color:var(--text1); margin-bottom:8px; }
+.vault-lock-sub   { font-size:13px; color:var(--text3); margin-bottom:24px; line-height:1.6; }
+.vault-pin-input  { width:100%; padding:12px 16px; background:var(--surface2); border:1px solid var(--border2); border-radius:var(--rs); color:var(--text1); font-size:22px; letter-spacing:6px; text-align:center; font-family:var(--font); outline:none; box-sizing:border-box; }
+.vault-pin-input:focus { border-color:var(--teal); }
+.vault-pin-btn    { width:100%; margin-top:14px; padding:11px; font-size:14px; background:var(--teal); color:#fff; border:none; border-radius:var(--rs); cursor:pointer; font-family:var(--font); font-weight:600; }
+.vault-pin-btn:hover { background:var(--teal2); }
+.vault-pin-err    { color:var(--coral); font-size:13px; margin-top:10px; min-height:18px; }
+.vault-grid       { display:grid; grid-template-columns:repeat(auto-fill,minmax(290px,1fr)); gap:12px; padding:4px 0 32px; }
+.vault-cat-hd     { grid-column:1/-1; font-size:10px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:var(--text3); padding:12px 0 4px; border-bottom:1px solid var(--border); margin-bottom:2px; }
+.vault-card       { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:14px 16px; display:flex; flex-direction:column; gap:9px; transition:border-color .15s; }
+.vault-card:hover { border-color:var(--border2); }
+.vault-card-hd    { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+.vault-card-label { font-weight:600; font-size:14px; color:var(--text1); }
+.vault-card-btns  { display:flex; gap:4px; flex-shrink:0; }
+.vault-icon-btn   { background:none; border:none; cursor:pointer; font-size:14px; padding:2px 5px; opacity:.55; transition:opacity .15s; }
+.vault-icon-btn:hover { opacity:1; }
+.vault-url        { font-size:11px; color:var(--teal2); text-decoration:none; word-break:break-all; }
+.vault-url:hover  { text-decoration:underline; }
+.vault-row        { display:flex; align-items:center; gap:7px; min-height:24px; }
+.vault-row-lbl    { font-size:11px; color:var(--text3); min-width:52px; flex-shrink:0; }
+.vault-row-val    { font-size:13px; color:var(--text2); flex:1; font-family:monospace; letter-spacing:.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.vault-row-val.revealed { color:var(--text1); letter-spacing:.3px; background:var(--surface2); padding:1px 6px; border-radius:3px; white-space:normal; word-break:break-all; }
+.vault-copy       { background:none; border:1px solid var(--border2); border-radius:var(--rs); color:var(--text3); font-size:10px; padding:2px 7px; cursor:pointer; white-space:nowrap; flex-shrink:0; }
+.vault-copy:hover { color:var(--teal2); border-color:var(--teal); }
+.vault-notes      { font-size:12px; color:var(--text3); line-height:1.5; padding-top:6px; border-top:1px solid var(--border); }
 </style>
 </head>
 <body>
@@ -1635,43 +1679,47 @@ body {
   </div>
   <nav class="sidebar-nav">
     <button class="nav-item active" onclick="showTab('dashboard')">
-      <span class="nav-icon">📊</span>
+      <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><rect x="3" y="12" width="4" height="9" rx="1"/><rect x="10" y="7" width="4" height="14" rx="1"/><rect x="17" y="4" width="4" height="17" rx="1"/></svg></span>
       <span class="nav-label">Dashboard</span>
     </button>
     <button class="nav-item" onclick="showTab('projetos')">
-      <span class="nav-icon">📂</span>
+      <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></span>
       <span class="nav-label">Projetos</span>
     </button>
     <button class="nav-item" onclick="showTab('briefing')">
-      <span class="nav-icon">⚡</span>
+      <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>
       <span class="nav-label">Briefing do Dia</span>
     </button>
     <button class="nav-item" onclick="showTab('hoje')">
-      <span class="nav-icon">✅</span>
+      <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
       <span class="nav-label">Fazer Hoje</span>
       <span class="nav-badge" id="badge-hoje" style="display:none"></span>
     </button>
     <button class="nav-item" onclick="showTab('reuniao')">
-      <span class="nav-icon">📅</span>
+      <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
       <span class="nav-label">Reunião Semanal</span>
     </button>
     <button class="nav-item" onclick="showTab('atividade')">
-      <span class="nav-icon">📋</span>
+      <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
       <span class="nav-label">Atualizações</span>
       <span class="nav-badge" id="badge-atividade">0</span>
     </button>
     <button class="nav-item" onclick="showTab('notificacoes')">
-      <span class="nav-icon">🔔</span>
+      <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
       <span class="nav-label">Notificações</span>
       <span class="nav-badge" id="badge-notif">0</span>
     </button>
+    <button class="nav-item" onclick="showTab('cofre')">
+      <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="12" cy="16" r="1" fill="currentColor" stroke="none"/></svg></span>
+      <span class="nav-label">Cofre</span>
+    </button>
     <div class="nav-sep"></div>
     <button class="nav-item" onclick="showTab('guia')">
-      <span class="nav-icon">📖</span>
+      <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>
       <span class="nav-label">Guia de Uso</span>
     </button>
     <button class="nav-item" onclick="exportarParaClaude()" title="Gera projetos-status.md para a skill girus-social" style="border-top:1px solid rgba(255,255,255,0.15);margin-top:8px;padding-top:12px;">
-      <span class="nav-icon">🤖</span>
+      <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3z"/></svg></span>
       <span class="nav-label">Exportar p/ Claude</span>
     </button>
   </nav>
@@ -1682,7 +1730,7 @@ body {
       <div id="sidebar-user" style="font-size:10px;color:var(--text3);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
       <button id="theme-toggle" onclick="toggleTheme()" style="width:100%;padding:5px 8px;background:none;border:1px solid var(--border2);border-radius:var(--rs);color:var(--text3);font-size:11px;cursor:pointer;font-family:var(--font);text-align:left;margin-bottom:4px" onmouseover="this.style.color='var(--teal2)'" onmouseout="this.style.color='var(--text3)'">☀ Modo claro</button>
             <button onclick="doLogout()" style="width:100%;padding:5px 8px;background:none;border:1px solid var(--border2);border-radius:var(--rs);color:var(--text3);font-size:11px;cursor:pointer;font-family:var(--font);text-align:left" onmouseover="this.style.color='var(--coral2)'" onmouseout="this.style.color='var(--text3)'">⎋ Sair</button>
-      <div style="font-size:9px;color:var(--text3);opacity:0.5;margin-top:4px;text-align:right">v3.0.3 · 16/06</div>
+      <div style="font-size:9px;color:var(--text3);opacity:0.5;margin-top:4px;text-align:right">v3.3 · 28/07</div>
       <div id="data-ts" style="font-size:9px;color:var(--text3);opacity:0.6;margin-top:2px;text-align:right"></div>
     </div>
   </div>
@@ -2009,6 +2057,22 @@ body {
     <div class="guide-wrap" id="guide-content"></div>
   </div>
 
+
+  <!-- ══ COFRE ══ -->
+  <div class="tab-pane" id="tab-cofre">
+    <div class="page-hd">
+      <div>
+        <div class="page-title">🔐 Cofre</div>
+        <div class="page-subtitle">Senhas e acessos protegidos por PIN</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn-teal" id="vault-add-btn" onclick="vaultAddNew()" style="display:none">+ Novo registro</button>
+        <button class="btn-cancel" id="vault-lock-btn" onclick="vaultLock()" style="display:none;font-size:12px;padding:7px 12px">🔒 Bloquear</button>
+      </div>
+    </div>
+    <div id="vault-body"></div>
+  </div>
+
 </div><!-- /main-content -->
 
 <div class="toast" id="toast-msg"></div>
@@ -2122,9 +2186,9 @@ body {
             incluída na mensagem ao Claude
           </span>
         </label>
-        <textarea id="mac-notes" rows="3"
+        <textarea id="mac-notes" rows="6"
           placeholder="O que foi definido ou decidido? Ex: Aprovado valor de R$399/mês com acesso de até 10 usuários."
-          style="min-height:72px"></textarea>
+          style="min-height:140px"></textarea>
       </div>
     </div>
     <div class="modal-footer">
@@ -2643,7 +2707,7 @@ async function loadNotifications() {
     return;
   }
   el.innerHTML = data.map(n => `
-    <div class="notif-item ${n.read ? 'read' : 'unread'}" onclick="markRead('${n.id}',this)">
+    <div class="notif-item ${n.read ? 'read' : 'unread'}" onclick="markRead('${n.id}',this);openFromNotif('${n.project_name}','${n.action_text}')">
       <div class="notif-body">
         <div class="notif-from">@menção de <strong>${n.from_user}</strong></div>
         <div class="notif-msg">${n.message}</div>
@@ -2664,6 +2728,16 @@ async function markAllRead() {
   const me = currentUserName();
   await supa.from('girus_notifications').update({ read: true }).eq('to_user', me).eq('read', false);
   loadNotifications();
+}
+
+function openFromNotif(projName, actionText) {
+  const p = state.projects.find(pr => pr.name === projName);
+  if (!p) return;
+  showTab('projetos');
+  currentProj = p.id;
+  renderDetail(p.id);
+  const a = p.actions.find(ac => ac.text === actionText);
+  if (a) setTimeout(() => openActionModal(p.id, a.id), 200);
 }
 
 function refreshCurrentView() {
@@ -2918,7 +2992,7 @@ function showTab(name) {
   document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
-  const navMap={dashboard:0,projetos:1,briefing:2,hoje:3,reuniao:4,atividade:5,notificacoes:6,guia:7};
+  const navMap={dashboard:0,projetos:1,briefing:2,hoje:3,reuniao:4,atividade:5,notificacoes:6,cofre:7,guia:8};
   const btns=document.querySelectorAll('.nav-item');
   if(navMap[name]!==undefined) btns[navMap[name]].classList.add('active');
   if (name === 'dashboard')    renderDashboard();
@@ -2928,6 +3002,7 @@ function showTab(name) {
   if (name === 'reuniao')      renderMeeting();
   if (name === 'atividade')    { loadActivity(true); }
   if (name === 'notificacoes') { loadNotifications(); }
+  if (name === 'cofre')         { renderVault(); }
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -2956,12 +3031,12 @@ function renderDashboard() {
   const urgItems = [...urgent, ...thisWeek];
   const urgTotal = urgItems.length;
   if (urgTotal > 0) { const hd = urgentEl.previousElementSibling; if (!hd.querySelector('.dash-count')) { const badge = document.createElement('span'); badge.className='dash-count'; badge.textContent=urgTotal; hd.appendChild(badge); } }
-  urgentEl.innerHTML = urgTotal ? urgItems.slice(0,5).map(a => `
-    <div class="dash-item">
+  urgentEl.innerHTML = urgTotal ? urgItems.map((a,i) => `
+    <div class="dash-item${i >= 5 ? ' dash-item-hidden' : ''}">
       <span class="dash-item-proj">${a.projName}</span>
       <span class="dash-item-txt">${a.text}</span>
       <span class="dash-item-dead ${deadClass(a.deadline)}">${fmtDate(a.deadline)}</span>
-    </div>`).join('') + (urgTotal > 5 ? `<div class="dash-ver-mais" onclick="renderDashboard()">+ ${urgTotal - 5} itens mais →</div>` : '') : '<div class="empty-msg">Nenhum item urgente. 🎉</div>';
+    </div>`).join('') + (urgTotal > 5 ? `<div class="dash-ver-mais" id="dash-urg-more" onclick="document.querySelectorAll('#dash-urgent .dash-item-hidden').forEach(el=>el.classList.remove('dash-item-hidden'));this.remove()">+ ${urgTotal - 5} itens mais →</div>` : '') : '<div class="empty-msg">Nenhum item urgente. 🎉</div>';
 
   // WIP
   const wipEl = document.getElementById('dash-wip');
@@ -3406,18 +3481,22 @@ function renderKanbanView(p) {
     if (activeResp) cards = cards.filter(a => a.resp === activeResp);
 
     // Sort: concluido por completedAt desc; outros por deadline asc
-    if (col.key === 'concluido') {
+    // Kanban: preserve array order (drag-and-drop manages position)
+    // concluído: most recent first if no manual order
+    if (col.key === 'concluido' && !cards.some(a => a.kOrder !== undefined)) {
       cards = [...cards].sort((a, b) => {
         const da = a.completedAt || a.deadline || '';
         const db = b.completedAt || b.deadline || '';
         return da > db ? -1 : da < db ? 1 : 0;
       });
-    } else {
+    } else if (col.key !== 'concluido' && !cards.some(a => a.kOrder !== undefined)) {
       cards = [...cards].sort((a, b) => {
         const da = a.deadline || '9999-99-99';
         const db = b.deadline || '9999-99-99';
         return da < db ? -1 : da > db ? 1 : 0;
       });
+    } else if (cards.some(a => a.kOrder !== undefined)) {
+      cards = [...cards].sort((a, b) => (a.kOrder ?? 9999) - (b.kOrder ?? 9999));
     }
 
     const totalCol = p.actions.filter(a => a.status === col.key).length;
@@ -3426,7 +3505,7 @@ function renderKanbanView(p) {
       : `${cards.length}`;
 
     return `
-      <div class="kanban-col">
+      <div class="kanban-col" data-status="${col.key}">
         <div class="kanban-col-hd" style="${col.hd}">
           <span>${col.label}</span>
           <span style="opacity:.6">${countLabel}</span>
@@ -3437,7 +3516,7 @@ function renderKanbanView(p) {
               const idx = STATUS_ORDER.indexOf(col.key);
               const isOverdueCard = a.deadline && isOverdue(a.deadline);
               return `
-              <div class="kanban-card" onclick="openActionModal('${p.id}','${a.id}')">
+              <div class="kanban-card" draggable="true" data-action-id="${a.id}" data-proj-id="${p.id}" onclick="if(_kdMoved){_kdMoved=false;return;}openActionModal('${p.id}','${a.id}')">
                 ${a.tema ? `<div style="font-size:10px;font-weight:700;color:var(--amber2);margin-bottom:4px;letter-spacing:.3px">${a.tema}</div>` : ''}
                 <div class="kanban-card-title">${a.text}</div>
                 <div class="kanban-card-meta">
@@ -3455,6 +3534,116 @@ function renderKanbanView(p) {
       </div>`;
   });
   el.innerHTML = filterBar + `<div class="kanban-board">${cols.join('')}</div>`;
+  requestAnimationFrame(() => initKanbanDnD(p.id));
+}
+
+
+// ── KANBAN DRAG & DROP ───────────────────────────────────────────────────────
+let _kdSrc  = null;   // { projId, actionId }
+let _kdMoved = false; // blocks stray click after drag
+
+function initKanbanDnD(projId) {
+  const board = document.querySelector('#actions-view-' + projId + ' .kanban-board');
+  if (!board) return;
+
+  board.querySelectorAll('.kanban-card').forEach(card => {
+    card.addEventListener('dragstart', e => {
+      _kdSrc = { projId, actionId: card.dataset.actionId };
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', card.dataset.actionId);
+      setTimeout(() => card.classList.add('kd-dragging'), 0);
+    });
+
+    card.addEventListener('dragend', () => {
+      card.classList.remove('kd-dragging');
+      board.querySelectorAll('.kanban-col').forEach(c => c.classList.remove('kd-over'));
+      board.querySelectorAll('.kanban-drop-ph').forEach(ph => ph.remove());
+    });
+
+    card.addEventListener('dragover', e => {
+      e.preventDefault();
+      if (!_kdSrc || card.dataset.actionId === _kdSrc.actionId) return;
+      const ph = _kdPh();
+      const mid = card.getBoundingClientRect().top + card.getBoundingClientRect().height / 2;
+      card.parentNode.insertBefore(ph, e.clientY < mid ? card : card.nextSibling);
+    });
+
+    card.addEventListener('drop', e => {
+      e.preventDefault();
+      if (!_kdSrc) return;
+      _kdMoved = true;
+      _kdDrop(card.closest('.kanban-col'));
+    });
+  });
+
+  board.querySelectorAll('.kanban-col').forEach(col => {
+    col.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      col.classList.add('kd-over');
+      const ph = _kdPh();
+      if (!col.contains(ph) && !col.querySelector('.kanban-card:not(.kd-dragging)')) {
+        col.appendChild(ph);
+      }
+    });
+    col.addEventListener('dragleave', e => {
+      if (!col.contains(e.relatedTarget)) col.classList.remove('kd-over');
+    });
+    col.addEventListener('drop', e => {
+      e.preventDefault();
+      if (!_kdSrc) return;
+      _kdMoved = true;
+      _kdDrop(col);
+    });
+  });
+}
+
+function _kdPh() {
+  let ph = document.querySelector('.kanban-drop-ph');
+  if (!ph) { ph = document.createElement('div'); ph.className = 'kanban-drop-ph'; }
+  return ph;
+}
+
+function _kdDrop(colEl) {
+  if (!_kdSrc) return;
+  const { projId, actionId } = _kdSrc;
+  const toStatus = colEl.dataset.status;
+  const p = state.projects.find(pr => pr.id === projId);
+  if (!p || !toStatus) { _kdSrc = null; return; }
+
+  // Remove action from array
+  const aIdx = p.actions.findIndex(a => a.id === actionId);
+  if (aIdx < 0) { _kdSrc = null; return; }
+  const [action] = p.actions.splice(aIdx, 1);
+  action.status = toStatus;
+
+  // Find insert position from placeholder
+  const ph = document.querySelector('.kanban-drop-ph');
+  let insertBeforeId = null;
+  if (ph) {
+    let sib = ph.nextElementSibling;
+    while (sib && !sib.dataset?.actionId) sib = sib.nextElementSibling;
+    if (sib?.dataset?.actionId) insertBeforeId = sib.dataset.actionId;
+  }
+
+  if (insertBeforeId) {
+    const insIdx = p.actions.findIndex(a => a.id === insertBeforeId);
+    p.actions.splice(insIdx >= 0 ? insIdx : p.actions.length, 0, action);
+  } else {
+    p.actions.push(action);
+  }
+
+  // Persist kOrder for all cards visible in this column (DOM order)
+  let ord = 0;
+  colEl.querySelectorAll('.kanban-card').forEach(card => {
+    const a = p.actions.find(ac => ac.id === card.dataset.actionId);
+    if (a) a.kOrder = ord++;
+  });
+  action.kOrder = action.kOrder ?? ord;
+
+  _kdSrc = null;
+  saveState();
+  setTimeout(() => renderDetail(projId), 150);
 }
 
 // ── TIMELINE ─────────────────────────────────────────────────────────────────
@@ -5155,6 +5344,267 @@ supa.auth.onAuthStateChange(async (event, session) => {
     document.getElementById('login-screen').style.display = 'flex';
   }
 });
+// ══════════════════════════════════════════════════════════════
+// COFRE — Vault de Senhas
+// ══════════════════════════════════════════════════════════════
+const VAULT_PIN_KEY    = 'girus_vault_pin';
+const VAULT_LOCK_MS    = 5 * 60 * 1000; // 5 min
+let _vaultUnlocked     = false;
+let _vaultLockTimer    = null;
+let _vaultRevealTimers = {};
+
+async function _vaultHash(pin) {
+  const enc  = new TextEncoder();
+  const data = enc.encode('girusvault_salt2024_' + pin);
+  const buf  = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+function _vaultResetTimer() {
+  clearTimeout(_vaultLockTimer);
+  _vaultLockTimer = setTimeout(() => {
+    _vaultUnlocked = false;
+    if (document.querySelector('#tab-cofre.active')) renderVault();
+  }, VAULT_LOCK_MS);
+}
+
+function vaultLock() {
+  _vaultUnlocked = false;
+  clearTimeout(_vaultLockTimer);
+  Object.values(_vaultRevealTimers).forEach(clearTimeout);
+  _vaultRevealTimers = {};
+  renderVault();
+}
+
+function renderVault() {
+  const body    = document.getElementById('vault-body');
+  const addBtn  = document.getElementById('vault-add-btn');
+  const lockBtn = document.getElementById('vault-lock-btn');
+  if (!body) return;
+
+  const hasPinSet = !!localStorage.getItem(VAULT_PIN_KEY);
+
+  // ── Bloqueado ─────────────────────────────────────────────────
+  if (!_vaultUnlocked) {
+    if (addBtn)  addBtn.style.display  = 'none';
+    if (lockBtn) lockBtn.style.display = 'none';
+
+    if (!hasPinSet) {
+      body.innerHTML = `
+        <div class="vault-lock-screen">
+          <div class="vault-lock-icon">🔐</div>
+          <div class="vault-lock-title">Criar PIN do Cofre</div>
+          <div class="vault-lock-sub">Defina um PIN de 4–8 dígitos para proteger seus registros.<br>Anote-o em lugar seguro — não há recuperação.</div>
+          <input type="password" class="vault-pin-input" id="vault-pin1" placeholder="Novo PIN" maxlength="8" inputmode="numeric"
+            onkeydown="if(event.key==='Enter')document.getElementById('vault-pin2').focus()">
+          <input type="password" class="vault-pin-input" id="vault-pin2" placeholder="Confirmar PIN" maxlength="8" inputmode="numeric"
+            style="margin-top:8px" onkeydown="if(event.key==='Enter')vaultCreatePin()">
+          <button class="vault-pin-btn" onclick="vaultCreatePin()">Criar PIN e Abrir Cofre</button>
+          <div class="vault-pin-err" id="vault-pin-err"></div>
+        </div>`;
+      setTimeout(() => document.getElementById('vault-pin1')?.focus(), 80);
+    } else {
+      body.innerHTML = `
+        <div class="vault-lock-screen">
+          <div class="vault-lock-icon">🔒</div>
+          <div class="vault-lock-title">Cofre Bloqueado</div>
+          <div class="vault-lock-sub">Digite o PIN para acessar.<br>O cofre trava automaticamente após 5 minutos de inatividade.</div>
+          <input type="password" class="vault-pin-input" id="vault-pin-enter" placeholder="PIN" maxlength="8" inputmode="numeric"
+            onkeydown="if(event.key==='Enter')vaultEnterPin()">
+          <button class="vault-pin-btn" onclick="vaultEnterPin()">Abrir Cofre</button>
+          <div class="vault-pin-err" id="vault-pin-err"></div>
+        </div>`;
+      setTimeout(() => document.getElementById('vault-pin-enter')?.focus(), 80);
+    }
+    return;
+  }
+
+  // ── Desbloqueado ──────────────────────────────────────────────
+  if (addBtn)  addBtn.style.display  = '';
+  if (lockBtn) lockBtn.style.display = '';
+  _vaultResetTimer();
+
+  const secrets = state.secrets || [];
+  if (!secrets.length) {
+    body.innerHTML = `<div class="empty-msg" style="margin-top:48px">Nenhum registro salvo ainda.<br>Clique em <b>+ Novo registro</b> para começar.</div>`;
+    return;
+  }
+
+  // Agrupar por categoria
+  const cats = {};
+  secrets.forEach(s => { const c = s.cat || 'Geral'; (cats[c] = cats[c] || []).push(s); });
+
+  let html = '<div class="vault-grid">';
+  Object.entries(cats).sort((a,b) => a[0].localeCompare(b[0])).forEach(([cat, items]) => {
+    html += `<div class="vault-cat-hd">${cat}</div>`;
+    items.forEach(s => {
+      html += `
+        <div class="vault-card" id="vc-${s.id}">
+          <div class="vault-card-hd">
+            <span class="vault-card-label">${s.label}</span>
+            <div class="vault-card-btns">
+              <button class="vault-icon-btn" onclick="vaultEdit('${s.id}')" title="Editar">✏️</button>
+              <button class="vault-icon-btn" onclick="vaultDelete('${s.id}')" title="Excluir">🗑️</button>
+            </div>
+          </div>
+          ${s.url ? `<a class="vault-url" href="${s.url}" target="_blank" rel="noopener noreferrer">🔗 ${s.url}</a>` : ''}
+          ${s.username ? `<div class="vault-row">
+            <span class="vault-row-lbl">Usuário</span>
+            <span class="vault-row-val">${s.username}</span>
+            <button class="vault-copy" onclick="vaultCopy('${s.id}','username')">Copiar</button>
+          </div>` : ''}
+          <div class="vault-row">
+            <span class="vault-row-lbl">Senha</span>
+            <span class="vault-row-val" id="vpw-${s.id}">••••••••</span>
+            <button class="vault-copy" onclick="vaultReveal('${s.id}')">👁</button>
+            <button class="vault-copy" onclick="vaultCopy('${s.id}','password')">Copiar</button>
+          </div>
+          ${s.notes ? `<div class="vault-notes">${s.notes}</div>` : ''}
+        </div>`;
+    });
+  });
+  html += '</div>';
+  body.innerHTML = html;
+}
+
+async function vaultCreatePin() {
+  const p1  = document.getElementById('vault-pin1').value;
+  const p2  = document.getElementById('vault-pin2').value;
+  const err = document.getElementById('vault-pin-err');
+  if (p1.length < 4)  { err.textContent = 'PIN deve ter pelo menos 4 dígitos.'; return; }
+  if (!/^\d+$/.test(p1)) { err.textContent = 'Use apenas números.'; return; }
+  if (p1 !== p2)      { err.textContent = 'Os PINs não coincidem.'; return; }
+  localStorage.setItem(VAULT_PIN_KEY, await _vaultHash(p1));
+  _vaultUnlocked = true;
+  renderVault();
+  showToast('✅ PIN criado. Cofre desbloqueado!');
+}
+
+async function vaultEnterPin() {
+  const pin = document.getElementById('vault-pin-enter').value;
+  if (!pin) return;
+  const hash = await _vaultHash(pin);
+  if (hash === localStorage.getItem(VAULT_PIN_KEY)) {
+    _vaultUnlocked = true;
+    renderVault();
+  } else {
+    const err = document.getElementById('vault-pin-err');
+    err.textContent = 'PIN incorreto. Tente novamente.';
+    document.getElementById('vault-pin-enter').value = '';
+    document.getElementById('vault-pin-enter').focus();
+  }
+}
+
+function vaultReveal(id) {
+  const el = document.getElementById('vpw-' + id);
+  if (!el) return;
+  const s = (state.secrets || []).find(x => x.id === id);
+  if (!s) return;
+  clearTimeout(_vaultRevealTimers[id]);
+  el.textContent = s.password || '(vazio)';
+  el.classList.add('revealed');
+  _vaultResetTimer();
+  _vaultRevealTimers[id] = setTimeout(() => {
+    el.textContent = '••••••••';
+    el.classList.remove('revealed');
+  }, 30000);
+}
+
+function vaultCopy(id, field) {
+  const s = (state.secrets || []).find(x => x.id === id);
+  if (!s || !s[field]) return;
+  navigator.clipboard.writeText(s[field]).then(() => {
+    showToast('📋 Copiado! Clipboard limpo em 30s.');
+    setTimeout(() => navigator.clipboard.writeText('').catch(()=>{}), 30000);
+  }).catch(() => showToast('Erro ao copiar. Tente revelar e copiar manualmente.'));
+  _vaultResetTimer();
+}
+
+function vaultAddNew()  { _vaultOpenModal(null); }
+function vaultEdit(id)  { _vaultOpenModal(id); }
+
+function _vaultOpenModal(id) {
+  const s = id ? (state.secrets || []).find(x => x.id === id) : null;
+  document.getElementById('vault-modal')?.remove();
+  const modal = document.createElement('div');
+  modal.className = 'modal-backdrop';
+  modal.id = 'vault-modal';
+  modal.style.display = 'flex';
+  modal.innerHTML = `
+    <div class="modal" style="max-width:460px">
+      <div class="modal-hd">
+        <span>${s ? 'Editar Registro' : 'Novo Registro'}</span>
+        <button class="modal-close" onclick="document.getElementById('vault-modal').remove()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="field"><label>Nome / Descrição *</label>
+          <input type="text" id="vm-label" placeholder="ex: Gmail Girus, Conta Banco X" value="${(s?.label||'').replace(/"/g,'&quot;')}"></div>
+        <div class="field"><label>Categoria</label>
+          <input type="text" id="vm-cat" placeholder="ex: Email, Redes Sociais, Banco" list="vm-cat-list" value="${(s?.cat||'Geral').replace(/"/g,'&quot;')}">
+          <datalist id="vm-cat-list">
+            <option>Email</option><option>Redes Sociais</option><option>Banco</option>
+            <option>Governo</option><option>Ferramentas</option><option>Geral</option>
+          </datalist></div>
+        <div class="field"><label>URL / Site</label>
+          <input type="url" id="vm-url" placeholder="https://..." value="${(s?.url||'').replace(/"/g,'&quot;')}"></div>
+        <div class="field"><label>Usuário / E-mail</label>
+          <input type="text" id="vm-username" placeholder="login@exemplo.com" value="${(s?.username||'').replace(/"/g,'&quot;')}"></div>
+        <div class="field"><label>Senha *</label>
+          <div style="display:flex;gap:6px;align-items:center">
+            <input type="password" id="vm-password" placeholder="••••••••" value="${(s?.password||'').replace(/"/g,'&quot;')}" style="flex:1">
+            <button type="button" class="btn-cancel" style="padding:7px 10px;font-size:13px;flex-shrink:0"
+              onclick="const f=document.getElementById('vm-password');f.type=f.type==='password'?'text':'password';this.textContent=f.type==='password'?'👁':'🙈'">👁</button>
+          </div></div>
+        <div class="field"><label>Notas (opcional)</label>
+          <textarea id="vm-notes" rows="2" placeholder="Informações adicionais...">${s?.notes||''}</textarea></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="document.getElementById('vault-modal').remove()">Cancelar</button>
+        <button class="btn-confirm" onclick="vaultSave('${id||''}')">Salvar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  setTimeout(() => document.getElementById('vm-label')?.focus(), 50);
+  _vaultResetTimer();
+}
+
+function vaultSave(id) {
+  const label    = document.getElementById('vm-label').value.trim();
+  const password = document.getElementById('vm-password').value;
+  if (!label)    { showToast('⚠ Informe um nome para o registro.'); return; }
+  if (!password) { showToast('⚠ Informe a senha.'); return; }
+  if (!state.secrets) state.secrets = [];
+  const entry = {
+    id:       id || ('sec_' + Date.now()),
+    label,
+    cat:      document.getElementById('vm-cat').value.trim() || 'Geral',
+    url:      document.getElementById('vm-url').value.trim(),
+    username: document.getElementById('vm-username').value.trim(),
+    password,
+    notes:    document.getElementById('vm-notes').value.trim(),
+  };
+  if (id) {
+    const idx = state.secrets.findIndex(x => x.id === id);
+    if (idx >= 0) state.secrets[idx] = entry; else state.secrets.push(entry);
+  } else {
+    state.secrets.push(entry);
+  }
+  document.getElementById('vault-modal').remove();
+  saveState();
+  renderVault();
+  showToast(id ? '✅ Registro atualizado.' : '✅ Registro salvo no Cofre.');
+  _vaultResetTimer();
+}
+
+function vaultDelete(id) {
+  if (!confirm('Excluir este registro permanentemente?')) return;
+  state.secrets = (state.secrets || []).filter(x => x.id !== id);
+  saveState();
+  renderVault();
+  showToast('Registro excluído do Cofre.');
+}
+
+
 </script>
 </body>
 </html>
