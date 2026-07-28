@@ -3633,13 +3633,9 @@ function _kdDrop(colEl) {
     p.actions.push(action);
   }
 
-  // Persist kOrder for all cards visible in this column (DOM order)
+  // Atribui kOrder com base na ordem do array após splice (não do DOM)
   let ord = 0;
-  colEl.querySelectorAll('.kanban-card').forEach(card => {
-    const a = p.actions.find(ac => ac.id === card.dataset.actionId);
-    if (a) a.kOrder = ord++;
-  });
-  action.kOrder = action.kOrder ?? ord;
+  p.actions.forEach(a => { if (a.status === toStatus) a.kOrder = ord++; });
 
   _kdSrc = null;
   saveState();
