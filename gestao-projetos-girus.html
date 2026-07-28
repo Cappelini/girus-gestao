@@ -978,6 +978,31 @@ body {
 .kanban-move-btn span:hover { color: var(--teal2); text-decoration: underline; }
 .kanban-card { cursor: grab; }
 .kanban-card.kd-dragging { opacity: .3; cursor: grabbing; box-shadow: none; transform: none; }
+/* ── CHECKLIST ───────────────────────────────────────────── */
+.checklist-section { margin-top: 6px; padding-top: 14px; border-top: 1px solid var(--border); }
+.checklist-hd { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+.checklist-hd-label { font-size:11px; font-weight:700; color:var(--text2); letter-spacing:.6px; text-transform:uppercase; }
+.checklist-progress-wrap { flex:1; height:6px; background:var(--border); border-radius:3px; overflow:hidden; }
+.checklist-progress-bar  { height:100%; background:var(--teal); border-radius:3px; transition:width .3s; }
+.checklist-count { font-size:11px; color:var(--text3); font-weight:700; flex-shrink:0; min-width:28px; text-align:right; }
+.checklist-items { display:flex; flex-direction:column; gap:3px; margin-bottom:10px; }
+.checklist-item { display:flex; align-items:flex-start; gap:8px; padding:6px 8px; border-radius:6px; background:var(--surface2); }
+.checklist-item:hover { background:var(--surface3); }
+.checklist-item input[type=checkbox] { accent-color:var(--teal); width:15px; height:15px; flex-shrink:0; cursor:pointer; margin-top:1px; }
+.checklist-item-text { flex:1; font-size:13px; color:var(--text); line-height:1.4; word-break:break-word; }
+.checklist-item-text.done { text-decoration:line-through; color:var(--text3); }
+.checklist-item-del { background:none; border:none; cursor:pointer; color:var(--text3); padding:0 3px; font-size:17px; line-height:1; opacity:.5; flex-shrink:0; }
+.checklist-item-del:hover { color:var(--coral); opacity:1; }
+.checklist-add { display:flex; gap:6px; }
+.checklist-add input { flex:1; font-size:13px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:6px 10px; color:var(--text); }
+.checklist-add input:focus { border-color:var(--teal); outline:none; background:var(--surface3); }
+.checklist-add-btn { padding:6px 14px; background:var(--surface3); border:1px solid var(--border); border-radius:6px; color:var(--text2); cursor:pointer; font-size:18px; line-height:1; }
+.checklist-add-btn:hover { background:var(--teal); color:#fff; border-color:var(--teal); }
+/* Badge no kanban card */
+.kanban-cl-badge { display:flex; align-items:center; gap:6px; margin-top:7px; }
+.kanban-cl-prog { flex:1; height:3px; background:var(--border); border-radius:2px; overflow:hidden; }
+.kanban-cl-prog-bar { height:100%; background:var(--teal); border-radius:2px; transition:width .25s; }
+.kanban-cl-count { font-size:10px; color:var(--text3); font-weight:700; white-space:nowrap; }
 .kanban-col.kd-over { outline: 2px dashed var(--teal); outline-offset: -3px; background: rgba(42,157,143,.05); border-radius: var(--rs); transition: background .15s; }
 .kanban-drop-ph { min-height: 52px; border: 2px dashed var(--teal); border-radius: var(--rs); background: rgba(42,157,143,.05); margin: 0; }
 
@@ -2189,6 +2214,22 @@ body {
         <textarea id="mac-notes" rows="6"
           placeholder="O que foi definido ou decidido? Ex: Aprovado valor de R$399/mês com acesso de até 10 usuários."
           style="min-height:140px"></textarea>
+      </div>
+      <!-- CHECKLIST -->
+      <div class="checklist-section">
+        <div class="checklist-hd">
+          <span class="checklist-hd-label">Checklist</span>
+          <div class="checklist-progress-wrap">
+            <div class="checklist-progress-bar" id="mac-cl-bar" style="width:0%"></div>
+          </div>
+          <span class="checklist-count" id="mac-cl-count"></span>
+        </div>
+        <div class="checklist-items" id="mac-cl-items"></div>
+        <div class="checklist-add">
+          <input type="text" id="mac-cl-new" placeholder="Adicionar sub-tarefa..."
+            onkeydown="if(event.key==='Enter'){event.preventDefault();addChecklistItem()}">
+          <button class="checklist-add-btn" onclick="addChecklistItem()" title="Adicionar">+</button>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
@@ -3524,6 +3565,15 @@ function renderKanbanView(p) {
                   ${a.deadline ? `<span class="kanban-card-dead ${deadClass(a.deadline)}">${isOverdueCard ? '⚠ ' : ''}${fmtDate(a.deadline)}</span>` : ''}
                 </div>
                 ${a.notes ? `<div class="kanban-card-notes">${a.notes}</div>` : ''}
+                ${(a.checklist && a.checklist.length > 0) ? (() => {
+                  const tot = a.checklist.length;
+                  const don = a.checklist.filter(i => i.done).length;
+                  const pct = Math.round(don / tot * 100);
+                  return `<div class="kanban-cl-badge">
+                    <div class="kanban-cl-prog"><div class="kanban-cl-prog-bar" style="width:${pct}%"></div></div>
+                    <span class="kanban-cl-count">✓ ${don}/${tot}</span>
+                  </div>`;
+                })() : ''}
                 <div class="kanban-move-btn" onclick="event.stopPropagation()">
                   ${idx > 0 ? `<span onclick="kanbanMoveStatus('${p.id}','${a.id}',-1)">← ${STATUS_LABEL[STATUS_ORDER[idx-1]]}</span>` : ''}
                   ${idx < STATUS_ORDER.length-1 ? `<span onclick="kanbanMoveStatus('${p.id}','${a.id}',1)">→ ${STATUS_LABEL[STATUS_ORDER[idx+1]]}</span>` : ''}
@@ -4443,6 +4493,7 @@ function openActionModal(projId, actionId) {
     document.getElementById('mac-resp').value        = a.resp     || 'Cappelini';
     document.getElementById('mac-deadline').value    = a.deadline || '';
     document.getElementById('mac-notes').value       = a.notes    || '';
+    _modalChecklist = (a.checklist || []).map(i => ({...i}));
     delBtn.style.display = 'inline-flex';
   } else {
     document.getElementById('mac-title').textContent  = 'Nova Ação';
@@ -4453,8 +4504,11 @@ function openActionModal(projId, actionId) {
     document.getElementById('mac-resp').value        = 'Cappelini';
     document.getElementById('mac-deadline').value    = '';
     document.getElementById('mac-notes').value       = '';
+    _modalChecklist = [];
     delBtn.style.display = 'none';
   }
+  document.getElementById('mac-cl-new').value = '';
+  renderChecklistInModal();
   modal.style.display = 'flex';
   setTimeout(() => document.getElementById('mac-text').focus(), 60);
 }
@@ -4477,13 +4531,14 @@ function saveAction() {
       const oldNotes = a.notes || '', oldStatus = a.status, oldDead = a.deadline;
       a.text = text; a.tema = tema; a.status = status;
       a.resp = resp; a.deadline = deadline; a.notes = notes;
+      a.checklist = [..._modalChecklist];
       if (oldStatus !== status)   logActivity(p.id, p.name, text, 'status', `${oldStatus} → ${status}`);
       if (oldDead   !== deadline) logActivity(p.id, p.name, text, 'prazo',  `${oldDead||'—'} → ${deadline||'—'}`);
       if (oldNotes  !== notes)    logActivity(p.id, p.name, text, 'notas',  '');
       checkAndSendMentions(p.name, text, oldNotes, notes);
     }
   } else {
-    const na = { id: uid(), text, tema, status, resp, deadline, notes };
+    const na = { id: uid(), text, tema, status, resp, deadline, notes, checklist: [..._modalChecklist] };
     p.actions.push(na);
     logActivity(p.id, p.name, text, 'nova_acao', `Status: ${status}`);
     checkAndSendMentions(p.name, text, '', notes);
@@ -4830,6 +4885,7 @@ function openActionModal(projId, actionId) {
     document.getElementById('mac-notes').value = a.notes || '';
     document.getElementById('mac-tema').value = a.tema || '';
     delBtn.style.display = 'block';
+    _modalChecklist = (a.checklist || []).map(i => ({...i}));
   } else {
     document.getElementById('mac-title').textContent = 'Nova Ação';
     document.getElementById('mac-action-id').value = '';
@@ -4840,12 +4896,15 @@ function openActionModal(projId, actionId) {
     document.getElementById('mac-notes').value = '';
     document.getElementById('mac-tema').value = '';
     delBtn.style.display = 'none';
+    _modalChecklist = [];
   }
   // Populate datalist with existing temas from this project
   const projForTema = state.projects.find(x => x.id === projId);
   const existingTemas = [...new Set((projForTema?.actions || []).map(a => a.tema).filter(Boolean))];
   const dl = document.getElementById('mac-tema-list');
   dl.innerHTML = existingTemas.map(t => `<option value="${t}">`).join('');
+  document.getElementById('mac-cl-new').value = '';
+  renderChecklistInModal();
   document.getElementById('modal-action').classList.add('open');
 }
 
@@ -4860,6 +4919,7 @@ function saveAction() {
     deadline: document.getElementById('mac-deadline').value,
     notes: document.getElementById('mac-notes').value.trim(),
     tema: document.getElementById('mac-tema').value.trim(),
+    checklist: [..._modalChecklist],
   };
   if (!data.text) return;
 
@@ -5343,6 +5403,49 @@ supa.auth.onAuthStateChange(async (event, session) => {
 // ══════════════════════════════════════════════════════════════
 // COFRE — Vault de Senhas
 // ══════════════════════════════════════════════════════════════
+// ── CHECKLIST (modal state) ───────────────────────────────
+let _modalChecklist = [];   // [{id, text, done}]
+
+function renderChecklistInModal() {
+  const itemsEl = document.getElementById('mac-cl-items');
+  const barEl   = document.getElementById('mac-cl-bar');
+  const countEl = document.getElementById('mac-cl-count');
+  if (!itemsEl) return;
+  const total = _modalChecklist.length;
+  const done  = _modalChecklist.filter(i => i.done).length;
+  const pct   = total ? Math.round(done / total * 100) : 0;
+  barEl.style.width      = pct + '%';
+  barEl.style.background = pct === 100 ? '#2a9d8f' : 'var(--teal)';
+  countEl.textContent    = total ? `${done}/${total}` : '';
+  itemsEl.innerHTML      = _modalChecklist.map(item => `
+    <div class="checklist-item">
+      <input type="checkbox" ${item.done ? 'checked' : ''}
+        onchange="toggleChecklistItem('${item.id}')">
+      <span class="checklist-item-text${item.done ? ' done' : ''}">${item.text.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</span>
+      <button class="checklist-item-del" onclick="deleteChecklistItem('${item.id}')" title="Remover">×</button>
+    </div>`).join('');
+}
+
+function addChecklistItem() {
+  const inp  = document.getElementById('mac-cl-new');
+  const text = inp.value.trim();
+  if (!text) return;
+  _modalChecklist.push({ id: 'cl_' + Date.now() + '_' + Math.random().toString(36).slice(2,5), text, done: false });
+  inp.value = '';
+  renderChecklistInModal();
+  inp.focus();
+}
+
+function toggleChecklistItem(id) {
+  const item = _modalChecklist.find(i => i.id === id);
+  if (item) { item.done = !item.done; renderChecklistInModal(); }
+}
+
+function deleteChecklistItem(id) {
+  _modalChecklist = _modalChecklist.filter(i => i.id !== id);
+  renderChecklistInModal();
+}
+
 const VAULT_PIN_KEY    = 'girus_vault_pin';
 const VAULT_LOCK_MS    = 5 * 60 * 1000; // 5 min
 let _vaultUnlocked     = false;
