@@ -95,8 +95,10 @@
 [data-theme="light"] .kanban-col-hd { background: #F1F2F4 !important; border-bottom-color: rgba(0,0,0,.06) !important; }
 /* No modo claro, o detail panel do Kanban deve ser transparente
    para o --bg (cinza-azulado) aparecer entre as colunas, igual ao Trello */
-[data-theme="light"] .proj-detail { background: transparent; border-color: transparent; }
-[data-theme="light"] .proj-detail .detail-hd { background: var(--surface); border-radius: var(--r) var(--r) 0 0; border: 1px solid var(--border); border-bottom: none; }
+[data-theme="light"] .proj-detail { background: transparent; border: 1px solid rgba(0,0,0,.18); }
+[data-theme="light"] .proj-detail .detail-hd { background: var(--surface2); border-bottom: 1px solid rgba(0,0,0,.10); border-radius: 0; }
+[data-theme="light"] .detail-meta { background: var(--surface2); }
+[data-theme="light"] .actions-hd { background: var(--surface2); }
 /* Header da área de conteúdo */
 [data-theme="light"] .page-header { background: transparent; }
 /* Badges e status */
@@ -126,7 +128,6 @@
 [data-theme="light"] .notif-item { background: #FFFFFF; border: 1px solid #D4DCE4; border-radius: var(--rs); box-shadow: 0 1px 3px rgba(0,0,0,.08); margin: 6px 16px 0; }
 [data-theme="light"] .notif-item:hover { background: #F1F2F4; box-shadow: 0 2px 6px rgba(0,0,0,.12); }
 [data-theme="light"] .notif-item.unread { border-left: 3px solid #27A99A; }
-[data-theme="light"] .kanban-board { border: 1px solid rgba(0,0,0,.18); border-radius: var(--rs); }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
