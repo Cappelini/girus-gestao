@@ -46,17 +46,20 @@
   --sidebar-w:220px;
 }
 
-/* ── MODO CLARO ── */
+/* ── MODO CLARO — estilo Trello (bg médio, cards brancos) ── */
 [data-theme="light"] {
-  --bg:       #F6F8FA;
+  /* Fundo do board: cinza-azulado médio — escuro o suficiente para os cards se destacarem */
+  --bg:       #B8C4CE;
+  /* Cards e painéis principais: branco puro */
   --surface:  #FFFFFF;
-  --surface2: #EAEEF2;
-  --surface3: #DCE2EA;
-  --border:   #D0D7DE;
-  --border2:  #BCC4CE;
+  /* Superfícies secundárias: cinza muito claro (colunas kanban, header modal) */
+  --surface2: #EEF1F4;
+  --surface3: #E2E7EC;
+  --border:   #C8D0D8;
+  --border2:  #B0BBC5;
   --text:     #1C2128;
-  --text2:    #57606A;
-  --text3:    #8C959F;
+  --text2:    #44515C;
+  --text3:    #7A8896;
 
   --navy:     #DBEAFE;
   --navy2:    #1D6FA8;
@@ -74,26 +77,40 @@
   --lcoral:   rgba(207,62,42,.10);
   --lamber:   rgba(181,137,0,.10);
 
-  --shadow:   0 2px 12px rgba(0,0,0,.08);
-  --shadow-lg:0 8px 32px rgba(0,0,0,.14);
+  --shadow:   0 2px 8px rgba(0,0,0,.14);
+  --shadow-lg:0 8px 32px rgba(0,0,0,.22);
 }
 
 /* Ajustes pontuais para modo claro */
-[data-theme="light"] .sidebar { background: #FFFFFF; border-right-color: #D0D7DE; }
-[data-theme="light"] .sidebar-brand { border-bottom-color: #D0D7DE; }
-[data-theme="light"] .nav-item.active { background: #DBEAFE; color: #1D6FA8; border-left: 2px solid var(--teal); padding-left: 10px; }
+/* Sidebar permanece branca — separa visualmente do board */
+[data-theme="light"] .sidebar { background: #FFFFFF; border-right-color: #C8D0D8; }
+[data-theme="light"] .sidebar-brand { border-bottom-color: #E2E7EC; }
+[data-theme="light"] .nav-item.active { background: #DBEAFE; color: #1D6FA8; border-left: 2px solid #1F8377; padding-left: 10px; }
 [data-theme="light"] .nav-item.active .nav-icon { color: #1D6FA8; }
-[data-theme="light"] .nav-item:hover:not(.active) { background: #EAEEF2; }
-[data-theme="light"] .s-afazer { background: rgba(92,108,130,.10); color: #57606A; }
+[data-theme="light"] .nav-item:hover:not(.active) { background: #EEF1F4; }
+/* Cards kanban e KPI: branco com sombra leve para flutuar sobre o bg */
+[data-theme="light"] .kanban-card { background: #FFFFFF; box-shadow: 0 1px 4px rgba(0,0,0,.12); border-color: #D4DCE4; }
+[data-theme="light"] .kanban-card:hover { box-shadow: 0 3px 10px rgba(0,0,0,.18); border-color: #27A99A; }
+[data-theme="light"] .kpi-card { background: #FFFFFF; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+/* Colunas kanban: cinza claro (camada intermediária entre bg e cards) */
+[data-theme="light"] .kanban-col { background: #DDE4EA; border-color: #C8D0D8; }
+[data-theme="light"] .kanban-col-hd { background: #D0D9E2 !important; }
+/* Header da área de conteúdo */
+[data-theme="light"] .page-header { background: transparent; }
+/* Badges e status */
+[data-theme="light"] .s-afazer { background: rgba(92,108,130,.12); color: #44515C; }
 [data-theme="light"] .badge-urgente { background: rgba(207,62,42,.12); color: #CF3E2A; }
 [data-theme="light"] .badge-andamento { background: rgba(29,111,168,.12); color: #1D6FA8; }
 [data-theme="light"] .badge-concluido { background: rgba(26,107,30,.12); color: #1A6B1E; }
 [data-theme="light"] .badge-bloqueado { background: rgba(181,137,0,.12); color: #B58900; }
 [data-theme="light"] .badge-afazer { background: rgba(92,108,130,.10); color: #57606A; }
-[data-theme="light"] .kpi-card { box-shadow: 0 1px 4px rgba(0,0,0,.08); }
-[data-theme="light"] .modal-overlay { background: rgba(0,0,0,.35); }
+/* Modal: fundo branco para contrastar com o bg escurecido */
+[data-theme="light"] .modal { background: #FFFFFF; }
+[data-theme="light"] .modal-hd { background: #EEF1F4; }
+[data-theme="light"] .modal-footer { background: #EEF1F4; }
+[data-theme="light"] .modal-backdrop { background: rgba(0,0,0,.45); }
 [data-theme="light"] input, [data-theme="light"] textarea, [data-theme="light"] select {
-  background: #FFFFFF; color: #1C2128; border-color: #D0D7DE;
+  background: #FFFFFF; color: #1C2128; border-color: #C8D0D8;
 }
 [data-theme="light"] input:focus, [data-theme="light"] textarea:focus, [data-theme="light"] select:focus {
   border-color: #1D6FA8; box-shadow: 0 0 0 3px rgba(29,111,168,.12);
