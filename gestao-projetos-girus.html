@@ -4444,15 +4444,26 @@ function renderHoje() {
   const status  = document.getElementById('hj-status')?.value || '';
   const prazo   = document.getElementById('hj-prazo')?.value || '';
 
-  // Collect actions: only overdue or due today (not completed)
-  let all = state.projects.flatMap(p =>
+  // Base pool: all non-concluded actions
+  const allActions = state.projects.flatMap(p =>
     p.actions.map(a => ({...a, projName: p.name, projId: p.id, projCat: p.cat}))
-  ).filter(a => a.status !== 'concluido' && (isOverdue(a.deadline) || isToday(a.deadline)));
+  ).filter(a => a.status !== 'concluido');
 
-  // Apply chip quick-filter first
-  if (_hjActiveChip === 'urgente') all = all.filter(a => a.status === 'urgente');
-  if (_hjActiveChip === 'meu')     all = all.filter(a => a.resp === 'Cappelini');
-  if (_hjActiveChip === 'helo')    all = all.filter(a => a.resp === 'Helo');
+  // Chip determines the base set (cada chip tem semântica própria)
+  let all;
+  if (_hjActiveChip === 'urgente') {
+    // Todas as urgentes (independente de prazo)
+    all = allActions.filter(a => a.status === 'urgente');
+  } else if (_hjActiveChip === 'meu') {
+    // Todas as minhas (independente de prazo)
+    all = allActions.filter(a => a.resp === 'Cappelini');
+  } else if (_hjActiveChip === 'helo') {
+    // Todas as da Helo (independente de prazo)
+    all = allActions.filter(a => a.resp === 'Helo');
+  } else {
+    // "Todos" = padrão: atrasadas + prazo hoje
+    all = allActions.filter(a => isOverdue(a.deadline) || isToday(a.deadline));
+  }
 
   // Apply advanced filters
   if (projId)  all = all.filter(a => a.projId === projId);
@@ -4500,7 +4511,8 @@ function renderHoje() {
   const sub = document.getElementById('hoje-subtitle');
   if (sub) {
     const hoje = new Date().toLocaleDateString('pt-BR', {weekday:'long', day:'numeric', month:'long'});
-    sub.textContent = hoje;
+    const chipLabel = { urgente: '· Todas as urgentes', meu: '· Minhas ações', helo: '· Ações da Helo' };
+    sub.textContent = hoje + (chipLabel[_hjActiveChip] || '');
   }
 
   // Render list
