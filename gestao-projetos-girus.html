@@ -48,13 +48,13 @@
 
 /* ── MODO CLARO — estilo Trello (bg médio, cards brancos) ── */
 [data-theme="light"] {
-  /* Fundo do board: cinza-azulado médio — escuro o suficiente para os cards se destacarem */
-  --bg:       #B8C4CE;
+  /* Fundo do board: cinza-azulado médio (≈ Trello board bg) */
+  --bg:       #A6B3BE;
   /* Cards e painéis principais: branco puro */
   --surface:  #FFFFFF;
-  /* Superfícies secundárias: cinza muito claro (colunas kanban, header modal) */
-  --surface2: #EEF1F4;
-  --surface3: #E2E7EC;
+  /* Superfícies secundárias: branco suave (colunas kanban, header modal) */
+  --surface2: #F4F5F7;
+  --surface3: #EBECF0;
   --border:   #C8D0D8;
   --border2:  #B0BBC5;
   --text:     #1C2128;
@@ -92,9 +92,13 @@
 [data-theme="light"] .kanban-card { background: #FFFFFF; box-shadow: 0 1px 4px rgba(0,0,0,.12); border-color: #D4DCE4; }
 [data-theme="light"] .kanban-card:hover { box-shadow: 0 3px 10px rgba(0,0,0,.18); border-color: #27A99A; }
 [data-theme="light"] .kpi-card { background: #FFFFFF; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
-/* Colunas kanban: cinza claro (camada intermediária entre bg e cards) */
-[data-theme="light"] .kanban-col { background: #DDE4EA; border-color: #C8D0D8; }
-[data-theme="light"] .kanban-col-hd { background: #D0D9E2 !important; }
+/* Colunas kanban: branco suave — exatamente como Trello (#EBECF0) */
+[data-theme="light"] .kanban-col { background: #EBECF0; border-color: rgba(0,0,0,.08); box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+[data-theme="light"] .kanban-col-hd { background: #EBECF0 !important; border-bottom-color: rgba(0,0,0,.08) !important; }
+/* No modo claro, o detail panel do Kanban deve ser transparente
+   para o --bg (cinza-azulado) aparecer entre as colunas, igual ao Trello */
+[data-theme="light"] .proj-detail { background: transparent; border-color: transparent; }
+[data-theme="light"] .proj-detail .detail-hd { background: var(--surface); border-radius: var(--r) var(--r) 0 0; border: 1px solid var(--border); border-bottom: none; }
 /* Header da área de conteúdo */
 [data-theme="light"] .page-header { background: transparent; }
 /* Badges e status */
@@ -1053,6 +1057,7 @@ body {
   overflow-x: auto;
   min-height: 320px;
   align-items: flex-start;
+  background: transparent; /* herda --bg da página */
 }
 .kanban-col { min-width: 185px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
 .kanban-col-hd {
