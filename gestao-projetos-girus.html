@@ -93,9 +93,6 @@
 [data-theme="light"] .kanban-col { background: #E2E2E2; border-color: rgba(0,0,0,.06); box-shadow: 0 1px 3px rgba(0,0,0,.10); }
 /* Header da coluna: #F1F2F4 para leve destaque */
 [data-theme="light"] .kanban-col-hd { background: #F1F2F4 !important; border-bottom-color: rgba(0,0,0,.06) !important; }
-/* Cards: branco puro sobre #E2E2E2 */
-[data-theme="light"] .kanban-card { background: #FFFFFF; box-shadow: 0 1px 3px rgba(0,0,0,.12); border-color: rgba(0,0,0,.06); }
-[data-theme="light"] .kanban-card:hover { box-shadow: 0 3px 8px rgba(0,0,0,.16); border-color: #27A99A; }
 /* No modo claro, o detail panel do Kanban deve ser transparente
    para o --bg (cinza-azulado) aparecer entre as colunas, igual ao Trello */
 [data-theme="light"] .proj-detail { background: transparent; border-color: transparent; }
@@ -121,6 +118,14 @@
   border-color: #1D6FA8; box-shadow: 0 0 0 3px rgba(29,111,168,.12);
 }
 [data-theme="light"] .tl2-bar-pct { text-shadow: none; color: #1C2128; }
+/* Atualizações e Notificações: itens como cards em modo claro */
+[data-theme="light"] .activity-item { background: #FFFFFF; border: 1px solid #D4DCE4; border-radius: var(--rs); box-shadow: 0 1px 3px rgba(0,0,0,.08); margin-bottom: 6px; }
+[data-theme="light"] .activity-item:last-child { border: 1px solid #D4DCE4; }
+[data-theme="light"] .activity-icon { background: #EEF0F4; color: var(--teal2); }
+[data-theme="light"] .activity-group-hd { color: #57606A; border-bottom-color: #C8C8C8; }
+[data-theme="light"] .notif-item { background: #FFFFFF; border: 1px solid #D4DCE4; border-radius: var(--rs); box-shadow: 0 1px 3px rgba(0,0,0,.08); margin: 6px 16px 0; }
+[data-theme="light"] .notif-item:hover { background: #F1F2F4; box-shadow: 0 2px 6px rgba(0,0,0,.12); }
+[data-theme="light"] .notif-item.unread { border-left: 3px solid #27A99A; }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -1711,7 +1716,6 @@ body {
 }
 .activity-item:last-child { border-bottom: none; }
 .activity-icon {
-  font-size: 18px;
   flex-shrink: 0;
   width: 32px;
   height: 32px;
@@ -1720,6 +1724,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  color: var(--text2);
 }
 .activity-body { flex: 1; min-width: 0; }
 .activity-who  { font-size: 11px; font-weight: 600; color: var(--teal2); }
@@ -2709,8 +2714,13 @@ async function logActivity(projId, projName, actionText, changeType, changeDetai
 }
 
 const ACTIVITY_ICON = {
-  nova_acao: '➕', status: '🔄', concluido: '✅',
-  reaberto: '↩', excluido: '🗑', notas: '💬', prazo: '📅'
+  nova_acao: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+  status:    `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>`,
+  concluido: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+  reaberto:  `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></svg>`,
+  excluido:  `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`,
+  notas:     `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
+  prazo:     `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
 };
 const ACTIVITY_LABEL = {
   nova_acao: 'criou nova ação', status: 'alterou status',
@@ -2862,7 +2872,7 @@ function renderActivityFeed() {
   function itemHTML(item) {
     return `
       <div class="activity-item">
-        <div class="activity-icon">${ACTIVITY_ICON[item.change_type] || '📌'}</div>
+        <div class="activity-icon">${ACTIVITY_ICON[item.change_type] || '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>'}</div>
         <div class="activity-body">
           <div class="activity-who">${item.done_by || 'Sistema'}</div>
           <div class="activity-what">
@@ -2870,7 +2880,7 @@ function renderActivityFeed() {
             ${item.action_text || ''}
             ${item.change_detail ? `<span style="color:var(--text3)"> — ${item.change_detail}</span>` : ''}
           </div>
-          <div class="activity-proj">📂 ${item.project_name || ''}</div>
+          <div class="activity-proj"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>${item.project_name || ''}</div>
           <div class="activity-time">${new Date(item.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})} · ${timeAgo(item.created_at)}</div>
         </div>
       </div>`;
@@ -3007,7 +3017,7 @@ async function loadNotifications() {
       <div class="notif-body">
         <div class="notif-from">@menção de <strong>${n.from_user}</strong></div>
         <div class="notif-msg">${n.message}</div>
-        <div class="notif-proj">📂 ${n.project_name} · ${n.action_text}</div>
+        <div class="notif-proj"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>${n.project_name} · ${n.action_text}</div>
         <div class="notif-time">${timeAgo(n.created_at)}</div>
       </div>
     </div>`).join('');
