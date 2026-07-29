@@ -46,17 +46,14 @@
   --sidebar-w:220px;
 }
 
-/* ── MODO CLARO — estilo Trello (bg médio, cards brancos) ── */
+/* ── MODO CLARO — paleta exata Trello ── */
 [data-theme="light"] {
-  /* Fundo do board: cinza-azulado médio (≈ Trello board bg) */
-  --bg:       #A6B3BE;
-  /* Cards e painéis principais: branco puro */
-  --surface:  #FFFFFF;
-  /* Superfícies secundárias: branco suave (colunas kanban, header modal) */
-  --surface2: #F4F5F7;
-  --surface3: #EBECF0;
-  --border:   #C8D0D8;
-  --border2:  #B0BBC5;
+  --bg:       #D9D9D9;   /* fundo do board */
+  --surface:  #FFFFFF;   /* cards (branco) */
+  --surface2: #F1F2F4;   /* superfícies secundárias / col headers */
+  --surface3: #E2E2E2;   /* colunas kanban */
+  --border:   #C8C8C8;
+  --border2:  #B4B4B4;
   --text:     #1C2128;
   --text2:    #44515C;
   --text3:    #7A8896;
@@ -83,8 +80,8 @@
 
 /* Ajustes pontuais para modo claro */
 /* Sidebar permanece branca — separa visualmente do board */
-[data-theme="light"] .sidebar { background: #FFFFFF; border-right-color: #C8D0D8; }
-[data-theme="light"] .sidebar-brand { border-bottom-color: #E2E7EC; }
+[data-theme="light"] .sidebar { background: #FFFFFF; border-right-color: #C8C8C8; }
+[data-theme="light"] .sidebar-brand { border-bottom-color: #E2E2E2; }
 [data-theme="light"] .nav-item.active { background: #DBEAFE; color: #1D6FA8; border-left: 2px solid #1F8377; padding-left: 10px; }
 [data-theme="light"] .nav-item.active .nav-icon { color: #1D6FA8; }
 [data-theme="light"] .nav-item:hover:not(.active) { background: #EEF1F4; }
@@ -92,9 +89,13 @@
 [data-theme="light"] .kanban-card { background: #FFFFFF; box-shadow: 0 1px 4px rgba(0,0,0,.12); border-color: #D4DCE4; }
 [data-theme="light"] .kanban-card:hover { box-shadow: 0 3px 10px rgba(0,0,0,.18); border-color: #27A99A; }
 [data-theme="light"] .kpi-card { background: #FFFFFF; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
-/* Colunas kanban: branco suave — exatamente como Trello (#EBECF0) */
-[data-theme="light"] .kanban-col { background: #EBECF0; border-color: rgba(0,0,0,.08); box-shadow: 0 1px 4px rgba(0,0,0,.12); }
-[data-theme="light"] .kanban-col-hd { background: #EBECF0 !important; border-bottom-color: rgba(0,0,0,.08) !important; }
+/* Colunas kanban: #E2E2E2 sobre fundo #D9D9D9 */
+[data-theme="light"] .kanban-col { background: #E2E2E2; border-color: rgba(0,0,0,.06); box-shadow: 0 1px 3px rgba(0,0,0,.10); }
+/* Header da coluna: #F1F2F4 para leve destaque */
+[data-theme="light"] .kanban-col-hd { background: #F1F2F4 !important; border-bottom-color: rgba(0,0,0,.06) !important; }
+/* Cards: branco puro sobre #E2E2E2 */
+[data-theme="light"] .kanban-card { background: #FFFFFF; box-shadow: 0 1px 3px rgba(0,0,0,.12); border-color: rgba(0,0,0,.06); }
+[data-theme="light"] .kanban-card:hover { box-shadow: 0 3px 8px rgba(0,0,0,.16); border-color: #27A99A; }
 /* No modo claro, o detail panel do Kanban deve ser transparente
    para o --bg (cinza-azulado) aparecer entre as colunas, igual ao Trello */
 [data-theme="light"] .proj-detail { background: transparent; border-color: transparent; }
@@ -110,8 +111,8 @@
 [data-theme="light"] .badge-afazer { background: rgba(92,108,130,.10); color: #57606A; }
 /* Modal: fundo branco para contrastar com o bg escurecido */
 [data-theme="light"] .modal { background: #FFFFFF; }
-[data-theme="light"] .modal-hd { background: #EEF1F4; }
-[data-theme="light"] .modal-footer { background: #EEF1F4; }
+[data-theme="light"] .modal-hd { background: #F1F2F4; }
+[data-theme="light"] .modal-footer { background: #F1F2F4; }
 [data-theme="light"] .modal-backdrop { background: rgba(0,0,0,.45); }
 [data-theme="light"] input, [data-theme="light"] textarea, [data-theme="light"] select {
   background: #FFFFFF; color: #1C2128; border-color: #C8D0D8;
