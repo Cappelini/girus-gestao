@@ -850,9 +850,12 @@ body {
   border: 1px solid var(--border2);
   border-radius: 14px;
   width: 100%;
-  max-width: 560px;
+  max-width: 860px;
+  max-height: 90vh;
   box-shadow: var(--shadow-lg);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 .modal-hd {
   padding: 16px 20px;
@@ -864,6 +867,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-shrink: 0;
 }
 .modal-close {
   background: none;
@@ -875,7 +879,34 @@ body {
   line-height: 1;
 }
 .modal-close:hover { color: var(--text); }
-.modal-body { padding: 20px; display: grid; gap: 14px; }
+.modal-body {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  flex: 1;
+  overflow: hidden;
+}
+.mac-col-left {
+  padding: 20px;
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+}
+.mac-col-right {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  background: var(--surface);
+}
+.mac-col-right .field { display: flex; flex-direction: column; flex: 1; }
+.mac-col-right .field textarea {
+  flex: 1;
+  min-height: 200px;
+  resize: none;
+}
 .field label {
   font-size: 11px;
   font-weight: 700;
@@ -908,6 +939,7 @@ body {
   justify-content: flex-end;
   border-top: 1px solid var(--border);
   background: var(--surface2);
+  flex-shrink: 0;
 }
 .btn-cancel {
   background: var(--surface3);
@@ -1023,11 +1055,10 @@ body {
   background: var(--surface2);
   border: 1px solid var(--border);
   border-radius: var(--rs);
-  padding: 12px 14px 12px 22px;
+  padding: 10px 12px;
   font-size: 13px;
   cursor: pointer;
   transition: .15s;
-  position: relative;
 }
 .kanban-card[data-status="urgente"]  { border-left: 3px solid var(--coral); }
 .kanban-card[data-status="andamento"]{ border-left: 3px solid var(--teal); }
@@ -1035,11 +1066,8 @@ body {
 .kanban-card[data-status="bloqueado"]{ border-left: 3px solid var(--amber); }
 .kanban-card[data-status="concluido"]{ border-left: 3px solid var(--border2); opacity:.8; }
 .kanban-card:hover { border-color: var(--teal); box-shadow: 0 2px 12px rgba(42,157,143,.2); transform: translateY(-1px); }
-/* Drag handle — visível no hover */
+/* Drag handle — dentro do cabeçalho flex do card */
 .kanban-drag-handle {
-  position: absolute;
-  left: 5px; top: 50%;
-  transform: translateY(-50%);
   color: var(--text3);
   opacity: 0;
   transition: opacity .15s;
@@ -1047,17 +1075,25 @@ body {
   line-height: 1;
   user-select: none;
   letter-spacing: -1px;
+  cursor: grab;
+  flex-shrink: 0;
 }
 .kanban-card:hover .kanban-drag-handle { opacity: .5; }
 .kanban-card.kd-dragging .kanban-drag-handle { opacity: 0; }
-/* Categoria acima do título */
+/* Cabeçalho do card: drag handle à esquerda, categoria à direita */
+.kanban-card-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
 .kanban-card-cat {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
   color: var(--teal2);
-  margin-bottom: 3px;
   text-transform: uppercase;
-  letter-spacing: .4px;
+  letter-spacing: .6px;
+  opacity: .8;
 }
 .kanban-card-title { color: var(--text); font-weight: 600; margin-bottom: 6px; line-height: 1.35; }
 .kanban-card-meta  { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
@@ -2358,68 +2394,74 @@ body {
     <div class="modal-body">
       <input type="hidden" id="mac-proj-id">
       <input type="hidden" id="mac-action-id">
-      <div class="field">
-        <label>Ação / Entrega</label>
-        <input type="text" id="mac-text" placeholder="Descreva a ação...">
-      </div>
-      <div class="field">
-        <label>Tema / Macro-ação</label>
-        <input type="text" id="mac-tema" placeholder="ex: Cicloturismo, Comtur, Agências" list="mac-tema-list" autocomplete="off">
-        <datalist id="mac-tema-list"></datalist>
-      </div>
-      <div class="fields-row">
+
+      <!-- COLUNA ESQUERDA: campos de metadados + checklist -->
+      <div class="mac-col-left">
         <div class="field">
-          <label>Status</label>
-          <select id="mac-status">
-            <option value="afazer">A Fazer</option>
-            <option value="andamento">Em Andamento</option>
-            <option value="urgente">Urgente</option>
-            <option value="concluido">Concluído</option>
-            <option value="bloqueado">Bloqueado</option>
-          </select>
+          <label>Ação / Entrega</label>
+          <input type="text" id="mac-text" placeholder="Descreva a ação...">
         </div>
         <div class="field">
-          <label>Responsável</label>
-          <select id="mac-resp">
-            <option>Cappelini</option>
-            <option>Helo</option>
-            <option>Capp/Helo</option>
-          </select>
+          <label>Tema / Macro-ação</label>
+          <input type="text" id="mac-tema" placeholder="ex: Cicloturismo, Comtur, Agências" list="mac-tema-list" autocomplete="off">
+          <datalist id="mac-tema-list"></datalist>
         </div>
-      </div>
-      <div class="fields-row">
-        <div class="field">
+        <div class="fields-row">
+          <div class="field">
+            <label>Status</label>
+            <select id="mac-status">
+              <option value="afazer">A Fazer</option>
+              <option value="andamento">Em Andamento</option>
+              <option value="urgente">Urgente</option>
+              <option value="concluido">Concluído</option>
+              <option value="bloqueado">Bloqueado</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Responsável</label>
+            <select id="mac-resp">
+              <option>Cappelini</option>
+              <option>Helo</option>
+              <option>Capp/Helo</option>
+            </select>
+          </div>
+        </div>
+        <div class="field" style="max-width:200px">
           <label>Prazo</label>
           <input type="date" id="mac-deadline">
         </div>
-      </div>
-      <div class="field">
-        <label style="display:flex;align-items:center;gap:7px">
-          📝 Observação
-          <span style="font-size:10px;font-weight:400;color:var(--teal2);background:var(--lteal);padding:2px 8px;border-radius:10px;letter-spacing:.3px">
-            incluída na mensagem ao Claude
-          </span>
-        </label>
-        <textarea id="mac-notes" rows="6"
-          placeholder="O que foi definido ou decidido? Ex: Aprovado valor de R$399/mês com acesso de até 10 usuários."
-          style="min-height:140px"></textarea>
-      </div>
-      <!-- CHECKLIST -->
-      <div class="checklist-section">
-        <div class="checklist-hd">
-          <span class="checklist-hd-label">Checklist</span>
-          <div class="checklist-progress-wrap">
-            <div class="checklist-progress-bar" id="mac-cl-bar" style="width:0%"></div>
+        <!-- CHECKLIST -->
+        <div class="checklist-section">
+          <div class="checklist-hd">
+            <span class="checklist-hd-label">Checklist</span>
+            <div class="checklist-progress-wrap">
+              <div class="checklist-progress-bar" id="mac-cl-bar" style="width:0%"></div>
+            </div>
+            <span class="checklist-count" id="mac-cl-count"></span>
           </div>
-          <span class="checklist-count" id="mac-cl-count"></span>
-        </div>
-        <div class="checklist-items" id="mac-cl-items"></div>
-        <div class="checklist-add">
-          <input type="text" id="mac-cl-new" placeholder="Adicionar sub-tarefa..."
-            onkeydown="if(event.key==='Enter'){event.preventDefault();addChecklistItem()}">
-          <button class="checklist-add-btn" onclick="addChecklistItem()" title="Adicionar">+</button>
+          <div class="checklist-items" id="mac-cl-items"></div>
+          <div class="checklist-add">
+            <input type="text" id="mac-cl-new" placeholder="Adicionar sub-tarefa..."
+              onkeydown="if(event.key==='Enter'){event.preventDefault();addChecklistItem()}">
+            <button class="checklist-add-btn" onclick="addChecklistItem()" title="Adicionar">+</button>
+          </div>
         </div>
       </div>
+
+      <!-- COLUNA DIREITA: observação (estilo Trello) -->
+      <div class="mac-col-right">
+        <div class="field">
+          <label style="display:flex;align-items:center;gap:7px">
+            📝 Observação
+            <span style="font-size:10px;font-weight:400;color:var(--teal2);background:var(--lteal);padding:2px 8px;border-radius:10px;letter-spacing:.3px">
+              incluída na mensagem ao Claude
+            </span>
+          </label>
+          <textarea id="mac-notes"
+            placeholder="O que foi definido ou decidido? Ex: Aprovado valor de R$399/mês com acesso de até 10 usuários."></textarea>
+        </div>
+      </div>
+
     </div>
     <div class="modal-footer">
       <button class="btn-danger" id="mac-del-btn" onclick="deleteAction()" style="display:none">Excluir</button>
@@ -3842,8 +3884,10 @@ function renderKanbanView(p) {
               const isOverdueCard = a.deadline && isOverdue(a.deadline);
               return `
               <div class="kanban-card" draggable="true" data-action-id="${a.id}" data-proj-id="${p.id}" onclick="if(_kdMoved){_kdMoved=false;return;}openActionModal('${p.id}','${a.id}')">
-                <span class="kanban-drag-handle" title="Arrastar">⋮⋮</span>
-                ${p.cat ? `<div class="kanban-card-cat">${p.cat}</div>` : ''}
+                <div class="kanban-card-hd">
+                  <span class="kanban-drag-handle" title="Arrastar">⋮⋮</span>
+                  ${p.cat ? `<span class="kanban-card-cat">${p.cat}</span>` : ''}
+                </div>
                 ${a.tema ? `<div style="font-size:10px;font-weight:700;color:var(--amber2);margin-bottom:4px;letter-spacing:.3px">${a.tema}</div>` : ''}
                 <div class="kanban-card-title">${a.text}</div>
                 ${(a.checklist && a.checklist.length > 0) ? (() => {
