@@ -2280,36 +2280,51 @@ body {
       <button class="btn-add" onclick="loadActivity(true)" style="margin-left:auto">↻ Atualizar</button>
     </div>
 
-    <!-- Filtros -->
-    <div class="activity-filters">
-      <div class="act-filter-group">
+    <!-- Chips de tipo -->
+    <div class="hoje-chip-row">
+      <span class="hoje-chip active" id="act-chip-todos" onclick="actChip('todos')">Todos</span>
+      <span class="hoje-chip" id="act-chip-concluido" onclick="actChip('concluido')">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Concluídas
+      </span>
+      <span class="hoje-chip" id="act-chip-nova_acao" onclick="actChip('nova_acao')">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Novas ações
+      </span>
+      <span class="hoje-chip" id="act-chip-status" onclick="actChip('status')">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        Status
+      </span>
+      <span class="hoje-chip" id="act-chip-notas" onclick="actChip('notas')">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Observações
+      </span>
+      <span class="hoje-chip" id="act-chip-hoje" onclick="toggleHojeAct()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Hoje
+      </span>
+      <span class="hoje-chip chip-mais" id="act-chip-mais" onclick="actChipMais()" style="margin-left:auto">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+        Mais filtros
+      </span>
+    </div>
+
+    <!-- Filtros avançados -->
+    <div class="hoje-filters" id="act-filters-adv">
+      <div class="hoje-filter-group">
         <label>Projeto</label>
         <select id="act-proj" onchange="renderActivityFeed()">
           <option value="">Todos os projetos</option>
         </select>
       </div>
-      <div class="act-filter-group">
+      <div class="hoje-filter-group">
         <label>Responsável</label>
         <select id="act-resp" onchange="renderActivityFeed()">
           <option value="">Todos</option>
         </select>
       </div>
-      <div class="act-filter-group">
-        <label>Tipo de mudança</label>
-        <select id="act-tipo" onchange="renderActivityFeed()">
-          <option value="">Todos os tipos</option>
-          <option value="concluido">✅ Concluídas</option>
-          <option value="nova_acao">➕ Novas ações</option>
-          <option value="status">🔄 Mudança de status</option>
-          <option value="notas">💬 Observações</option>
-          <option value="prazo">📅 Prazo alterado</option>
-          <option value="reaberto">↩ Reabertas</option>
-          <option value="excluido">🗑 Excluídas</option>
-        </select>
-      </div>
-      <button id="btn-hoje-act" class="btn-hoje-filter" onclick="toggleHojeAct()">📅 Realizadas hoje</button>
-      <button class="act-filter-clear" onclick="limparFiltrosAct()">✕ Limpar</button>
-      <button class="act-report-btn" onclick="imprimirRelatorioAct()">🖨 Imprimir relatório</button>
+      <button class="act-report-btn" style="align-self:flex-end" onclick="imprimirRelatorioAct()">🖨 Imprimir</button>
+      <button class="hoje-filter-clear" onclick="limparFiltrosAct()">✕ Limpar</button>
     </div>
 
     <div class="activity-stats" id="act-stats"></div>
@@ -2324,6 +2339,14 @@ body {
       </div>
       <button class="btn-add" onclick="markAllRead()" style="margin-left:auto">✓ Marcar todas lidas</button>
     </div>
+    <div class="hoje-chip-row" style="margin-bottom:8px">
+      <span class="hoje-chip active" id="notif-chip-todas" onclick="notifChip('todas')">Todas</span>
+      <span class="hoje-chip" id="notif-chip-nao_lidas" onclick="notifChip('nao_lidas')">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        Não lidas
+      </span>
+    </div>
+    <div class="hoje-stats" id="notif-stats" style="margin-bottom:8px"></div>
     <div id="notif-list"></div>
   </div>
 
@@ -2740,6 +2763,24 @@ function timeAgo(ts) {
 
 let _activityData = [];     // dados brutos do Supabase
 let _actHojeOnly  = false;  // toggle "realizadas hoje"
+let _actChip      = 'todos'; // chip de tipo ativo
+
+function actChip(tipo) {
+  _actChip = tipo;
+  ['todos','concluido','nova_acao','status','notas'].forEach(t => {
+    document.getElementById('act-chip-' + t)?.classList.toggle('active', t === tipo);
+  });
+  renderActivityFeed();
+}
+
+function actChipMais() {
+  const adv = document.getElementById('act-filters-adv');
+  const btn = document.getElementById('act-chip-mais');
+  if (!adv) return;
+  const open = adv.style.display !== 'flex';
+  adv.style.display = open ? 'flex' : 'none';
+  btn?.classList.toggle('active', open);
+}
 
 async function loadActivity(fromBtn) {
   const el = document.getElementById('activity-feed');
@@ -2791,22 +2832,19 @@ function populateActivityFilters(data) {
 
 function toggleHojeAct() {
   _actHojeOnly = !_actHojeOnly;
-  const btn = document.getElementById('btn-hoje-act');
-  if (btn) btn.classList.toggle('active', _actHojeOnly);
+  document.getElementById('act-chip-hoje')?.classList.toggle('active', _actHojeOnly);
   renderActivityFeed();
 }
 
 function limparFiltrosAct() {
   const projSel = document.getElementById('act-proj');
   const respSel = document.getElementById('act-resp');
-  const tipoSel = document.getElementById('act-tipo');
   if (projSel) projSel.value = '';
   if (respSel) respSel.value = '';
-  if (tipoSel) tipoSel.value = '';
   _actHojeOnly = false;
-  const btn = document.getElementById('btn-hoje-act');
-  if (btn) btn.classList.remove('active');
-  renderActivityFeed();
+  document.getElementById('act-chip-hoje')?.classList.remove('active');
+  _actChip = 'todos';
+  actChip('todos');
 }
 
 function renderActivityFeed() {
@@ -2815,7 +2853,7 @@ function renderActivityFeed() {
 
   const filtProj = document.getElementById('act-proj')?.value || '';
   const filtResp = document.getElementById('act-resp')?.value || '';
-  const filtTipo = document.getElementById('act-tipo')?.value || '';
+  const filtTipo = (_actChip && _actChip !== 'todos') ? _actChip : '';
 
   const todayStart = new Date(); todayStart.setHours(0,0,0,0);
   const todayEnd   = new Date(); todayEnd.setHours(23,59,59,999);
@@ -2985,6 +3023,50 @@ async function checkAndSendMentions(projName, actionText, notesOld, notesNew) {
   }
 }
 
+let _notifChip = 'todas';
+let _notifData = [];
+
+function notifChip(tipo) {
+  _notifChip = tipo;
+  ['todas','nao_lidas'].forEach(t => {
+    document.getElementById('notif-chip-' + t)?.classList.toggle('active', t === tipo);
+  });
+  renderNotifList();
+}
+
+function renderNotifList() {
+  const data = _notifData;
+  const el = document.getElementById('notif-list');
+  const stats = document.getElementById('notif-stats');
+  if (!el) return;
+
+  const total  = data.length;
+  const unread = data.filter(n => !n.read).length;
+  if (stats) {
+    stats.innerHTML = total
+      ? `<span><strong>${total}</strong> notificaç${total !== 1 ? 'ões' : 'ão'}</span>` +
+        (unread ? `<span style="color:var(--teal2)">● <strong>${unread}</strong> não lida${unread !== 1 ? 's' : ''}</span>` : '<span>Todas lidas</span>')
+      : '';
+  }
+
+  let items = data;
+  if (_notifChip === 'nao_lidas') items = data.filter(n => !n.read);
+
+  if (!items.length) {
+    el.innerHTML = `<div class="notif-empty">${_notifChip === 'nao_lidas' ? 'Nenhuma notificação não lida.' : 'Nenhuma notificação ainda.'}</div>`;
+    return;
+  }
+  el.innerHTML = items.map(n => `
+    <div class="notif-item ${n.read ? 'read' : 'unread'}" onclick="markRead('${n.id}',this);openFromNotif('${n.project_name}','${n.action_text}')">
+      <div class="notif-body">
+        <div class="notif-from">@menção de <strong>${n.from_user}</strong></div>
+        <div class="notif-msg">${n.message}</div>
+        <div class="notif-proj"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>${n.project_name} · ${n.action_text}</div>
+        <div class="notif-time">${timeAgo(n.created_at)}</div>
+      </div>
+    </div>`).join('');
+}
+
 async function loadNotifications() {
   const me = currentUserName();
   const { data, error } = await supa
@@ -2996,7 +3078,9 @@ async function loadNotifications() {
 
   if (error) console.warn('loadNotifications erro:', error);
 
-  const unread = (data || []).filter(n => !n.read).length;
+  _notifData = data || [];
+
+  const unread = _notifData.filter(n => !n.read).length;
   const badge = document.getElementById('badge-notif');
   if (badge) {
     if (unread > 0) {
@@ -3008,21 +3092,7 @@ async function loadNotifications() {
     }
   }
 
-  const el = document.getElementById('notif-list');
-  if (!el) return;
-  if (!data || !data.length) {
-    el.innerHTML = '<div class="notif-empty">Nenhuma notificação ainda.</div>';
-    return;
-  }
-  el.innerHTML = data.map(n => `
-    <div class="notif-item ${n.read ? 'read' : 'unread'}" onclick="markRead('${n.id}',this);openFromNotif('${n.project_name}','${n.action_text}')">
-      <div class="notif-body">
-        <div class="notif-from">@menção de <strong>${n.from_user}</strong></div>
-        <div class="notif-msg">${n.message}</div>
-        <div class="notif-proj"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>${n.project_name} · ${n.action_text}</div>
-        <div class="notif-time">${timeAgo(n.created_at)}</div>
-      </div>
-    </div>`).join('');
+  renderNotifList();
 }
 
 async function markRead(id, el) {
