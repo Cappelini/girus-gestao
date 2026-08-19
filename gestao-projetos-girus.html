@@ -2666,9 +2666,22 @@ function saveState() {
 }
 
 // Realtime: quando a outra usuária salva, atualiza a tela
+//
+// Idempotente de propósito: existem 2 listeners onAuthStateChange (mais
+// abaixo no arquivo) que chamam setupRealtime() de forma redundante, e
+// onAuthStateChange dispara não só no login mas também em todo refresh
+// automático de token — sem esse cleanup, cada evento empilhava mais 3
+// canais WebSocket que nunca eram fechados, crescendo sem limite ao longo
+// de uma sessão aberta o dia todo. Cada canal reautentica contra o Supabase
+// Auth, e isso foi identificado como fonte de carga excessiva no projeto
+// Supabase compartilhado com o Toordata (achado de 19/08/2026).
+let _realtimeChannels = [];
 function setupRealtime() {
+  _realtimeChannels.forEach(ch => supa.removeChannel(ch));
+  _realtimeChannels = [];
+
   // Sincroniza estado compartilhado
-  supa.channel('girus_state_changes')
+  const chState = supa.channel('girus_state_changes')
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'girus_state' },
       payload => {
         // Ignora se estou salvando (indicator visível) OU se há um save pendente (timer ativo)
@@ -2680,7 +2693,7 @@ function setupRealtime() {
     ).subscribe();
 
   // Novas atividades → atualiza badge e feed se visível
-  supa.channel('girus_activity_changes')
+  const chActivity = supa.channel('girus_activity_changes')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'girus_activity' },
       payload => {
         // Só atualiza badge se não fui eu quem gerou
@@ -2700,7 +2713,7 @@ function setupRealtime() {
     ).subscribe();
 
   // Novas notificações para este usuário → atualiza badge
-  supa.channel('girus_notif_changes')
+  const chNotif = supa.channel('girus_notif_changes')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'girus_notifications' },
       payload => {
         const row = payload.new;
@@ -2717,6 +2730,8 @@ function setupRealtime() {
         }
       }
     ).subscribe();
+
+  _realtimeChannels = [chState, chActivity, chNotif];
 }
 
 // ══════════════════════════════════════════════════════════════
